@@ -26,7 +26,7 @@
       }
       ?>
 
-      <!-- <form action="proses_login_admin.php" method="POST">
+      <!-- <form action="proses_login.php" method="POST">
         <table>
             <tr>
                 <td>Email</td>
@@ -45,7 +45,7 @@
             </tr>
         </table>
       </form> -->
-      <form action="proses_login_admin.php" method="POST">
+      <form action="proses_login.php" method="POST">
   <div class="mb-3">
     <label for="exampleInputEmail1" class="form-label">Email address</label>
     <input type="email" name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
