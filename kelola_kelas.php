@@ -66,13 +66,13 @@ $hasil = mysqli_query($koneksi, $sql);
             <td><?php echo $row['updated_at']; ?></td>
 
             <td>
-                <a href="edit_kelas.php?id=<?php echo $row['id']; ?>"></a>
-                 <button type="button" class="btn btn-info">Edit</button>
+                <a href="edit_kelas.php?id=<?php echo $row['id']; ?>">
+                 <button type="button" class="btn btn-info">Edit</button></a>
 
 
                 <a href="hapus_kelas.php?id=<?php echo $row['id']; ?>"
-                   onclick="return confirm('Yakin ingin menghapus data kelas ini?');"></a>
-                <button type="button" class="btn btn-secondary">Hapus</button>
+                   onclick="return confirm('Yakin ingin menghapus data kelas ini?');">
+                <button type="button" class="btn btn-secondary">Hapus</button></a>
             </td>
 
         </tr>
