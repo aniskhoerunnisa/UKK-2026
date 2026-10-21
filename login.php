@@ -1,60 +1,123 @@
-<!-- login.php -->
+<?php
+session_start();
+
+$error = '';
+
+if (isset($_SESSION['pesan_error'])) {
+    $error = $_SESSION['pesan_error'];
+    unset($_SESSION['pesan_error']);
+}
+?>
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@6.0.0-alpha.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-B/GM4XqrwHnWXNOWMbloTmrYXZg10cakYGmpfsR/bbzQ6JAJI4ihuyADKLnBgrCe" crossorigin="anonymous">
-<script type="module" src="https://cdn.jsdelivr.net/npm/bootstrap@6.0.0-alpha.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-1a/pXj49ZQ1aHEmrJ+gMw1otqoVsYwlEnlD8mIfY2TV03r20Y0CN7uqx1tQogjPL" crossorigin="anonymous"></script>
-     <title>Login - Sistem Pelanggaran Siswa</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Login - Sistem Pelanggaran Siswa</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background: #f3f5fb;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #243b65;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        .form-control {
+            height: 45px;
+            border-radius: 8px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 11px;
+            border-radius: 8px;
+            background: #5368ed;
+            color: white;
+            font-weight: bold;
+            border: none;
+        }
+
+        .btn-login:hover {
+            background: #4054d6;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <script type="importmap">
-{
-  "imports": {
-    "@floating-ui/dom": "https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.7.6/dist/floating-ui.dom.esm.min.js",
-    "vanilla-calendar-pro": "https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3.4.0/index.mjs"
-  }
-}
-</script>
-<script type="module" src="https://cdn.jsdelivr.net/npm/bootstrap@6.0.0-alpha.1/dist/js/bootstrap.min.js" integrity="sha384-BJf/nQgxZJU68GxBse97Vdlc8Rh+z9PzzXiS3/BjV+1nQPR7IKn+iJnD3DJvCMaU" crossorigin="anonymous"></script>
-      <h1>Login Sistem Pelanggaran Siswa</h1>
 
-      <?php
-      session_start();
-      if (isset($_SESSION['pesan_error'])) {
-        echo '<p>' . $_SESSION['pesan_error'] . '<p>';
-        unset($_SESSION['pesan_error']);
-      }
-      ?>
+<div class="login-card">
 
-      <!-- <form action="proses_login.php" method="POST">
-        <table>
-            <tr>
-                <td>Email</td>
-                <td>:</td>
-                <td><input type="text" name="email" required></td>
-            </tr>
-            <tr>
-                <td>Password</td>
-                <td>:</td>
-                <td><input type="password" name="password" required></td>
-            </tr>
-            <tr>
-                <td colspan="3">
-                    <input type="submit" value="Login">
-                </td>
-            </tr>
-        </table>
-      </form> -->
-      <form action="proses_login.php" method="POST">
-  <div class="mb-3">
-    <label for="exampleInputEmail1" class="form-label">Email address</label>
-    <input type="email" name="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp">
-  </div>
-  <div class="mb-3">
-    <label for="exampleInputPassword1" class="form-label">Password</label>
-    <input type="password" name="password" class="form-control" id="exampleInputPassword1">
-  </div>
-  <button type="submit" class="btn-solid theme-primary">Submit</button>
-</form>
+    <h2>Login</h2>
+    <p class="subtitle">Sistem Pelanggaran Siswa</p>
+
+    <?php if ($error !== '') { ?>
+        <div class="alert alert-danger">
+            <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
+        </div>
+    <?php } ?>
+
+    <form action="proses_login.php" method="POST">
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input
+                type="email"
+                name="email"
+                id="email"
+                class="form-control"
+                placeholder="Masukkan email"
+                autocomplete="username"
+                required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input
+                type="password"
+                name="password"
+                id="password"
+                class="form-control"
+                placeholder="Masukkan password"
+                autocomplete="current-password"
+                required>
+        </div>
+
+        <button type="submit" class="btn btn-login">
+            Login
+        </button>
+
+    </form>
+
+</div>
+
 </body>
 </html>
