@@ -498,10 +498,7 @@ main > .row > [class*="col-"] > .quote-box {
                 </h5>
 
                 <p class="mb-0">
-                    "Nggak harus sempurna buat memulai.
-                    Mulai aja dulu, belajar dari prosesnya,
-                    dan biarkan diri kita berkembang sedikit
-                    demi sedikit."
+                    "GASUKA JANJI MANIS SOALNYA AKU UDA MANIS."
                 </p>
             </div>
         </div>
