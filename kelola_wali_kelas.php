@@ -1,620 +1,289 @@
-
 <?php
 // kelola_wali_kelas.php
+
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-/*
-|--------------------------------------------------------------------------
-| FUNGSI UNTUK MEMERIKSA KOLOM TABEL
-|--------------------------------------------------------------------------
-*/
-function ambilKolom($koneksi, $tabel)
-{
-    $kolom = [];
-    $hasil = mysqli_query($koneksi, "SHOW COLUMNS FROM `$tabel`");
+// Mengambil data wali kelas beserta nama kelas dan guru
+$sql = "SELECT
+            w.*,
+            k.nama AS nama_kelas,
+            g.nama AS nama_guru
+        FROM t_wali_kelas w
+        LEFT JOIN t_kelas k ON w.kelas_id = k.id
+        LEFT JOIN t_guru g ON w.guru_id = g.id
+        ORDER BY w.id DESC";
 
-    if ($hasil) {
-        while ($baris = mysqli_fetch_assoc($hasil)) {
-            $kolom[] = $baris['Field'];
-        }
-    }
+$hasil = mysqli_query($koneksi, $sql);
 
-    return $kolom;
-}
-
-function cariKolom($daftarKolom, $pilihan)
-{
-    foreach ($pilihan as $nama) {
-        if (in_array($nama, $daftarKolom, true)) {
-            return $nama;
-        }
-    }
-
-    return null;
-}
-
-/*
-|--------------------------------------------------------------------------
-| PERIKSA STRUKTUR TABEL
-|--------------------------------------------------------------------------
-*/
-$error_query = '';
-$hasil = false;
-
-$kolomWali = ambilKolom($koneksi, 't_wali_kelas');
-$kolomGuru = ambilKolom($koneksi, 't_guru');
-$kolomKelas = ambilKolom($koneksi, 't_kelas');
-
-if (empty($kolomWali)) {
-    $error_query = "Tabel t_wali_kelas tidak ditemukan atau tidak dapat dibaca.";
-} elseif (empty($kolomGuru)) {
-    $error_query = "Tabel t_guru tidak ditemukan atau tidak dapat dibaca.";
-} elseif (empty($kolomKelas)) {
-    $error_query = "Tabel t_kelas tidak ditemukan atau tidak dapat dibaca.";
-} else {
-
-    /*
-    |--------------------------------------------------------------------------
-    | CARI KOLOM RELASI SECARA OTOMATIS
-    |--------------------------------------------------------------------------
-    */
-    $fkGuru = cariKolom($kolomWali, [
-        'id_guru',
-        'guru_id',
-        'id_data_guru',
-        'nip'
-    ]);
-
-    $pkGuru = cariKolom($kolomGuru, [
-        'id',
-        'id_guru',
-        'guru_id',
-        'nip'
-    ]);
-
-    $fkKelas = cariKolom($kolomWali, [
-        'id_kelas',
-        'kelas_id',
-        'id_data_kelas'
-    ]);
-
-    $pkKelas = cariKolom($kolomKelas, [
-        'id',
-        'id_kelas',
-        'kelas_id'
-    ]);
-
-    $idWali = cariKolom($kolomWali, [
-        'id',
-        'id_wali_kelas',
-        'wali_kelas_id'
-    ]);
-
-    /*
-    |--------------------------------------------------------------------------
-    | JALANKAN QUERY JIKA RELASI DITEMUKAN
-    |--------------------------------------------------------------------------
-    */
-    if (!$fkGuru || !$pkGuru) {
-        $error_query =
-            "Kolom relasi guru belum ditemukan. " .
-            "Periksa struktur tabel t_wali_kelas dan t_guru.";
-    } elseif (!$fkKelas || !$pkKelas) {
-        $error_query =
-            "Kolom relasi kelas belum ditemukan. " .
-            "Periksa struktur tabel t_wali_kelas dan t_kelas.";
-    } elseif (!$idWali) {
-        $error_query =
-            "Primary key data wali kelas belum ditemukan. " .
-            "Pastikan tabel t_wali_kelas memiliki kolom ID.";
-    } else {
-
-        $sql = "SELECT
-                    wk.*,
-                    g.nama AS nama_guru,
-                    k.nama AS nama_kelas
-                FROM t_wali_kelas AS wk
-                LEFT JOIN t_guru AS g
-                    ON wk.`$fkGuru` = g.`$pkGuru`
-                LEFT JOIN t_kelas AS k
-                    ON wk.`$fkKelas` = k.`$pkKelas`
-                ORDER BY g.nama ASC";
-
-        $hasil = mysqli_query($koneksi, $sql);
-
-        if (!$hasil) {
-            $error_query =
-                "Query gagal dijalankan: " .
-                mysqli_error($koneksi);
-        }
-    }
+if (!$hasil) {
+    die("Query gagal: " . mysqli_error($koneksi));
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Kelola Wali Kelas - Sistem Pelanggaran Siswa</title>
+    <title>Kelola Wali Kelas</title>
 
-<link rel="stylesheet"
- href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        rel="stylesheet">
 
-<link rel="stylesheet"
- href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- DataTables Bootstrap 5 -->
+    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
+        rel="stylesheet">
 
-<link rel="stylesheet"
- href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
 
-<style>
-* {
-    box-sizing: border-box;
-}
+        .card-header {
+            background-color: #212529;
+            color: white;
+            font-weight: bold;
+        }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f6ff;
-    color: #202d49;
-}
+        .table thead th {
+            white-space: nowrap;
+        }
 
-.sidebar {
-    width: 304px;
-    min-height: 100vh;
-    background: #202d49;
-    padding: 22px 15px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    overflow-y: auto;
-}
+        .table td {
+            vertical-align: middle;
+        }
+    </style>
 
-.logo {
-    color: white;
-    font-size: 25px;
-    font-weight: bold;
-    margin-bottom: 38px;
-}
-
-.menu-label {
-    color: #8390aa;
-    font-size: 12px;
-    margin-bottom: 18px;
-}
-
-.menu a {
-    display: block;
-    color: #e3e9f7;
-    text-decoration: none;
-    padding: 15px;
-    margin-bottom: 7px;
-    border-radius: 12px;
-    font-size: 14px;
-    transition: .2s;
-}
-
-.menu a i {
-    width: 25px;
-}
-
-.menu a:hover,
-.menu a.active {
-    background: #5368ed;
-    color: white;
-}
-
-.menu-divider {
-    border-top: 1px solid #3b4760;
-    margin-top: 20px;
-    padding-top: 15px;
-}
-
-.menu a.logout {
-    color: #ff5368;
-}
-
-.main {
-    margin-left: 304px;
-    padding: 28px 30px 40px;
-}
-
-.page-title {
-    font-size: 32px;
-    font-weight: bold;
-}
-
-.page-title span {
-    color: #7764ef;
-}
-
-.subtitle {
-    color: #7e8ca9;
-    margin-bottom: 25px;
-}
-
-.top-banner {
-    background: linear-gradient(115deg, #5268ed, #8260e9);
-    color: white;
-    padding: 28px 32px;
-    border-radius: 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 10px 25px rgba(83,103,237,.12);
-}
-
-.top-banner .label {
-    display: inline-block;
-    background: rgba(255,255,255,.2);
-    padding: 8px 14px;
-    border-radius: 25px;
-    font-size: 11px;
-    margin-bottom: 12px;
-}
-
-.top-banner h3 {
-    font-size: 25px;
-    font-weight: bold;
-}
-
-.top-banner p {
-    margin-bottom: 0;
-    line-height: 1.8;
-}
-
-.btn-add {
-    background: linear-gradient(110deg, #5268ed, #8260e9);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 18px;
-    font-weight: bold;
-}
-
-.btn-add:hover {
-    color: white;
-    opacity: .9;
-}
-
-.table-card {
-    background: white;
-    padding: 24px;
-    border-radius: 18px;
-    box-shadow: 0 8px 25px rgba(30,45,80,.05);
-}
-
-.table-heading {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 6px;
-}
-
-.table-description {
-    color: #7e8ca9;
-    margin-bottom: 22px;
-}
-
-#tabelWaliKelas {
-    width: 100% !important;
-}
-
-#tabelWaliKelas th,
-#tabelWaliKelas td {
-    vertical-align: middle;
-}
-
-#tabelWaliKelas thead th {
-    background: #202d49;
-    color: white;
-    border-color: #35425f;
-    white-space: nowrap;
-}
-
-#tabelWaliKelas td {
-    color: #46536d;
-}
-
-.table-striped tbody tr:nth-of-type(odd) {
-    background: #f7f8ff;
-}
-
-.aksi {
-    white-space: nowrap;
-}
-
-.btn-sm {
-    border-radius: 7px;
-    margin: 2px;
-}
-
-.dataTables_wrapper {
-    color: #526078;
-    font-size: 13px;
-}
-
-.dataTables_wrapper .form-control,
-.dataTables_wrapper select {
-    border: 1px solid #dfe4f1;
-    border-radius: 8px;
-}
-
-.dataTables_wrapper .page-item.active .page-link {
-    background: #5368ed;
-    border-color: #5368ed;
-}
-
-.dataTables_wrapper .page-link {
-    color: #5368ed;
-}
-
-.footer {
-    color: #8b97ad;
-    font-size: 13px;
-    margin-top: 25px;
-}
-
-@media (max-width: 767px) {
-    .sidebar {
-        position: relative;
-        width: 100%;
-        min-height: auto;
-    }
-
-    .logo {
-        margin-bottom: 25px;
-    }
-
-    .main {
-        margin-left: 0;
-        padding: 22px 15px;
-    }
-
-    .page-title {
-        font-size: 27px;
-    }
-
-    .top-banner {
-        padding: 23px;
-    }
-
-    .table-card {
-        padding: 15px;
-    }
-}
-</style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-    <div class="logo">
-        <i class="fas fa-layer-group"></i> MyWebsite.
-    </div>
+    <div class="container-fluid">
 
-    <div class="menu-label">MENU UTAMA</div>
+        <div class="row">
 
-    <nav class="menu">
-        <a href="dashboard.php">
-            <i class="fas fa-th-large"></i> Dashboard
-        </a>
+            <!-- SIDEBAR -->
+            <?php include 'layout/sidebar.php'; ?>
 
-        <a href="kelola_siswa.php">
-            <i class="fas fa-user-graduate"></i> Kelola Siswa
-        </a>
+            <!-- KONTEN UTAMA -->
+            <main class="col-md-9 col-lg-10 p-4">
 
-        <a href="kelola_guru.php">
-            <i class="fas fa-chalkboard-teacher"></i> Kelola Guru
-        </a>
+                <!-- JUDUL HALAMAN -->
+                <h1 class="mb-3">Kelola Wali Kelas</h1>
 
-        <a href="kelola_wali_kelas.php" class="active">
-            <i class="fas fa-user-tie"></i> Wali Kelas
-        </a>
+                <!-- TOMBOL NAVIGASI -->
+                <div class="mb-3">
 
-        <a href="kelola_kelas.php">
-            <i class="fas fa-school"></i> Kelola Kelas
-        </a>
+                    <a href="dashboard.php" class="btn btn-secondary">
+                        Kembali ke Dashboard
+                    </a>
 
-        <a href="kelola_tahun_ajaran.php">
-            <i class="fas fa-calendar-alt"></i> Tahun Ajaran
-        </a>
+                    <a href="tambah_wali_kelas.php" class="btn btn-primary">
+                        + Tambah Wali Kelas
+                    </a>
 
-        <a href="about_me.php">
-            <i class="fas fa-user-circle"></i> About Me
-        </a>
+                </div>
 
-        <div class="menu-divider">
-            <a href="logout.php" class="logout">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
+                <!-- CARD DAFTAR WALI KELAS -->
+                <div class="card shadow-sm">
+
+                    <!-- HEADER CARD -->
+                    <div class="card-header">
+                        Daftar Wali Kelas
+                    </div>
+
+                    <!-- BODY CARD -->
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table id="tabelWaliKelas"
+                                class="table table-striped table-bordered table-hover align-middle w-100">
+
+                                <!-- HEADER TABEL -->
+                                <thead class="table-dark">
+
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Tahun Ajaran ID</th>
+                                        <th>Kelas</th>
+                                        <th>Guru</th>
+                                        <th>Tanggal Mulai</th>
+                                        <th>Tanggal Selesai</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+
+                                </thead>
+
+                                <!-- ISI TABEL -->
+                                <tbody>
+
+                                    <?php while ($row = mysqli_fetch_assoc($hasil)) { ?>
+
+                                        <tr>
+
+                                            <!-- Nomor urut otomatis -->
+                                            <td></td>
+
+                                            <td>
+                                                <?= htmlspecialchars((string) ($row['tahun_ajaran_id'] ?? '')) ?>
+                                            </td>
+
+                                            <td>
+                                                <?= htmlspecialchars($row['nama_kelas'] ?? '-') ?>
+                                            </td>
+
+                                            <td>
+                                                <?= htmlspecialchars($row['nama_guru'] ?? '-') ?>
+                                            </td>
+
+                                            <td>
+                                                <?= htmlspecialchars($row['tanggal_mulai'] ?? '-') ?>
+                                            </td>
+
+                                            <td>
+                                                <?= htmlspecialchars($row['tanggal_selesai'] ?? '-') ?>
+                                            </td>
+
+                                            <!-- STATUS AKTIF -->
+                                            <td>
+
+                                                <?php if ((int) ($row['status_aktif'] ?? 0) === 1) { ?>
+
+                                                    <span class="badge bg-success">
+                                                        Aktif
+                                                    </span>
+
+                                                <?php } else { ?>
+
+                                                    <span class="badge bg-danger">
+                                                        Tidak Aktif
+                                                    </span>
+
+                                                <?php } ?>
+
+                                            </td>
+
+                                            <!-- TOMBOL AKSI -->
+                                            <td>
+
+                                                <div class="d-flex gap-2">
+
+                                                    <a href="edit_wali_kelas.php?id=<?= urlencode((string) $row['id']) ?>"
+                                                        class="btn btn-warning btn-sm">
+                                                        Edit
+                                                    </a>
+
+                                                    <a href="hapus_wali_kelas.php?id=<?= urlencode((string) $row['id']) ?>"
+                                                        class="btn btn-danger btn-sm"
+                                                        onclick="return confirm('Yakin ingin menghapus data wali kelas ini?');">
+                                                        Hapus
+                                                    </a>
+
+                                                </div>
+
+                                            </td>
+
+                                        </tr>
+
+                                    <?php } ?>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </main>
+
         </div>
-    </nav>
-</aside>
-
-<!-- KONTEN UTAMA -->
-<main class="main">
-
-    <h1 class="page-title">
-        Kelola Wali Kelas <span>.</span>
-    </h1>
-
-    <p class="subtitle">
-        Kelola penugasan guru sebagai wali kelas ✨
-    </p>
-
-    <!-- BANNER -->
-    <section class="top-banner">
-        <div class="label">
-            <i class="fas fa-heart"></i> DATA WALI KELAS
-        </div>
-
-        <h3>
-            <i class="fas fa-user-tie"></i>
-            Manajemen Wali Kelas
-        </h3>
-
-        <p>
-            Lihat dan kelola penugasan guru untuk setiap kelas
-            di sekolah melalui halaman ini.
-        </p>
-    </section>
-
-    <!-- JUDUL DAN TOMBOL -->
-    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
-        <div>
-            <h4 class="font-weight-bold">Daftar Wali Kelas</h4>
-            <p class="text-muted">
-                Data guru yang ditugaskan sebagai wali kelas.
-            </p>
-        </div>
-
-        <a href="tambah_wali_kelas.php" class="btn btn-add mb-3">
-            <i class="fas fa-plus"></i> Tambah Wali Kelas
-        </a>
-    </div>
-
-    <!-- TABEL -->
-    <div class="table-card">
-
-        <div class="table-heading">
-            <i class="fas fa-list" style="color:#7764ef"></i>
-            Tabel Data Wali Kelas
-        </div>
-
-        <p class="table-description">
-            Cari guru atau kelas menggunakan kolom pencarian.
-        </p>
-
-        <?php if ($error_query !== '') { ?>
-
-            <div class="alert alert-danger">
-                <strong>Data gagal dimuat!</strong><br>
-                <?= htmlspecialchars($error_query) ?>
-                <hr>
-                Periksa struktur kolom pada tabel
-                <code>t_wali_kelas</code>,
-                <code>t_guru</code>, dan
-                <code>t_kelas</code> di phpMyAdmin.
-            </div>
-
-        <?php } else { ?>
-
-        <div class="table-responsive">
-            <table id="tabelWaliKelas"
-                   class="table table-bordered table-striped table-hover">
-
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Nama Guru</th>
-                        <th>Kelas</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                <?php
-                $no = 1;
-
-                while ($row = mysqli_fetch_assoc($hasil)) {
-                ?>
-                    <tr>
-                        <td><?= $no++ ?></td>
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $row['nama_guru'] ?? 'Belum ditentukan'
-                            ) ?>
-                        </td>
-
-                        <td>
-                            <?= htmlspecialchars(
-                                $row['nama_kelas'] ?? 'Belum ditentukan'
-                            ) ?>
-                        </td>
-
-                        <td class="aksi">
-                            <a href="edit_wali_kelas.php?id=<?= (int)$row[$idWali] ?>"
-                               class="btn btn-info btn-sm">
-                                <i class="fas fa-edit"></i> Edit
-                            </a>
-
-                            <a href="hapus_wali_kelas.php?id=<?= (int)$row[$idWali] ?>"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm('Yakin ingin menghapus penugasan wali kelas ini?')">
-                                <i class="fas fa-trash"></i> Hapus
-                            </a>
-                        </td>
-                    </tr>
-                <?php } ?>
-                </tbody>
-
-            </table>
-        </div>
-
-        <?php } ?>
 
     </div>
 
-    <div class="footer">
-        Sistem Pelanggaran Siswa &copy; <?= date('Y') ?>
-    </div>
 
-</main>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
 
-<script>
-$(document).ready(function () {
-    if ($('#tabelWaliKelas').length) {
-        $('#tabelWaliKelas').DataTable({
-            pageLength: 10,
+    <!-- DataTables Bootstrap 5 -->
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
-            lengthMenu: [
-                [5, 10, 25, 50, -1],
-                [5, 10, 25, 50, 'Semua']
-            ],
 
-            searching: true,
-            ordering: true,
-            paging: true,
-            info: true,
-            autoWidth: false,
+    <!-- INISIALISASI DATATABLES -->
+    <script>
+        $(document).ready(function() {
 
-            order: [[1, 'asc']],
+            var tabel = $('#tabelWaliKelas').DataTable({
 
-            columnDefs: [{
-                targets: 3,
-                orderable: false,
-                searchable: false
-            }],
+                language: {
 
-            language: {
-                search: 'Cari:',
-                searchPlaceholder: 'Cari wali kelas...',
-                lengthMenu: 'Tampilkan _MENU_ data',
-                info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
-                infoEmpty: 'Tidak ada data',
-                infoFiltered: '(difilter dari _MAX_ total data)',
-                zeroRecords: 'Data wali kelas tidak ditemukan',
-                emptyTable: 'Belum ada data wali kelas',
+                    search: "Cari:",
 
-                paginate: {
-                    first: 'Pertama',
-                    last: 'Terakhir',
-                    next: 'Berikutnya',
-                    previous: 'Sebelumnya'
+                    lengthMenu: "Tampilkan _MENU_ data",
+
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
+                    infoEmpty: "Tidak ada data wali kelas",
+
+                    infoFiltered: "(difilter dari _MAX_ total data)",
+
+                    zeroRecords: "Data wali kelas tidak ditemukan",
+
+                    emptyTable: "Belum ada data wali kelas",
+
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Berikutnya",
+                        previous: "Sebelumnya"
+                    }
+
+                },
+
+                pageLength: 10,
+
+                lengthMenu: [5, 10, 25, 50, 100],
+
+                order: [],
+
+                columnDefs: [{
+                    targets: [0, 7],
+                    orderable: false,
+                    searchable: false
+                }],
+
+                // Nomor urut otomatis
+                drawCallback: function() {
+
+                    var api = this.api();
+
+                    var info = api.page.info();
+
+                    api.column(0, {
+                        page: 'current'
+                    }).nodes().each(function(cell, i) {
+
+                        cell.innerHTML = info.start + i + 1;
+
+                    });
+
                 }
-            }
+
+            });
+
         });
-    }
-});
-</script>
+    </script>
 
 </body>
+
 </html>

@@ -325,27 +325,27 @@ body {
 
         <a href="kelola_siswa.php">
             <i class="fas fa-user-graduate"></i>
-            Data Siswa
+            kelola Siswa
         </a>
 
         <a href="kelola_guru.php">
             <i class="fas fa-chalkboard-teacher"></i>
-            Data Guru
+            kelola Guru
         </a>
 
         <a href="wali_kelas.php">
             <i class="fas fa-user-tie"></i>
-             Data Wali Kelas
+             kelola Wali Kelas
         </a>
 
         <a href="kelola_kelas.php">
             <i class="fas fa-school"></i>
-            Data Kelas
+            kelola Kelas
         </a>
 
         <a href="kelola_tahun_ajaran.php">
             <i class="fas fa-calendar-alt"></i>
-             Data Tahun Ajaran
+             kelola Tahun Ajaran
         </a>
 
         <?php } ?>
