@@ -1,4 +1,3 @@
-
 <?php
 include 'includes/cek_session.php';
 ?>
@@ -14,9 +13,7 @@ include 'includes/cek_session.php';
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <style>
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     margin: 0;
@@ -37,10 +34,7 @@ body {
     font-weight: 700;
     margin-bottom: 35px;
 }
-
-.brand span {
-    color: #91a7ff;
-}
+.brand span { color: #91a7ff; }
 
 .sidebar .nav-link {
     color: #c4cce0;
@@ -49,11 +43,7 @@ body {
     margin-bottom: 7px;
     transition: .2s;
 }
-
-.sidebar .nav-link i {
-    width: 25px;
-}
-
+.sidebar .nav-link i { width: 25px; }
 .sidebar .nav-link:hover,
 .sidebar .nav-link.active {
     background: #5268e8;
@@ -65,18 +55,12 @@ main {
     min-width: 0;
 }
 
-.top-title {
-    margin-bottom: 25px;
-}
-
+.top-title { margin-bottom: 25px; }
 .top-title h2 {
     font-weight: 750;
     color: #202b46;
 }
-
-.top-title p {
-    color: #8490a8;
-}
+.top-title p { color: #8490a8; }
 
 .hero {
     position: relative;
@@ -87,7 +71,6 @@ main {
     background: linear-gradient(120deg, #5268e8, #8264e8);
     box-shadow: 0 12px 30px rgba(82,104,232,.18);
 }
-
 .hero:after {
     content: "";
     position: absolute;
@@ -99,20 +82,17 @@ main {
     top: -75px;
     pointer-events: none;
 }
-
 .hero h1 {
     position: relative;
     font-weight: 800;
     font-size: 34px;
 }
-
 .hero p {
     position: relative;
     max-width: 550px;
     line-height: 1.8;
     color: #f0efff;
 }
-
 .hero-label {
     position: relative;
     display: inline-block;
@@ -133,36 +113,41 @@ main {
     box-shadow: 0 6px 20px rgba(35,48,85,.04);
     overflow-wrap: anywhere;
 }
-
 .section-card h5 {
     font-weight: 750;
     margin-bottom: 15px;
 }
-
 .section-card p {
     color: #7b879e;
     line-height: 1.8;
     margin-bottom: 0;
 }
 
-.profile-avatar {
-    width: 85px;
-    height: 85px;
-    border-radius: 24px;
-    background: linear-gradient(135deg,#5268e8,#a18aff);
-    color: white;
-    font-size: 35px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Foto profil */
+.profile-photo-wrap {
+    width: 126px;
+    height: 126px;
+    padding: 5px;
     margin-bottom: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5268e8, #a18aff, #e6b8ff);
+    box-shadow: 0 7px 18px rgba(82,104,232,.22);
+}
+.profile-photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center 35%;
+    background: #eef0ff;
 }
 
 .profile-name {
     font-size: 23px;
     font-weight: 750;
 }
-
 .profile-role {
     color: #7d8aa4;
     font-size: 14px;
@@ -172,17 +157,12 @@ main {
     padding: 13px 0;
     border-bottom: 1px solid #eef0f6;
 }
-
-.info-row:last-child {
-    border-bottom: none;
-}
-
+.info-row:last-child { border-bottom: none; }
 .info-label {
     color: #8a95aa;
     font-size: 12px;
     margin-bottom: 4px;
 }
-
 .info-value {
     font-weight: 600;
     overflow-wrap: anywhere;
@@ -200,7 +180,6 @@ main {
     margin-right: 10px;
     flex-shrink: 0;
 }
-
 .skill-tag {
     display: inline-block;
     padding: 9px 13px;
@@ -211,7 +190,6 @@ main {
     font-size: 13px;
     font-weight: 600;
 }
-
 .quote-box {
     background: #202b46;
     color: white;
@@ -221,16 +199,11 @@ main {
     min-width: 0;
     overflow-wrap: anywhere;
 }
-
-.quote-box h5 {
-    line-height: 1.5;
-}
-
+.quote-box h5 { line-height: 1.5; }
 .quote-box p {
     color: #dce2f5;
     line-height: 1.8;
 }
-
 .footer {
     text-align: center;
     color: #9aa4b8;
@@ -239,24 +212,19 @@ main {
     font-size: 13px;
 }
 
-/* Perbaikan layout agar card tidak bertabrakan */
-.container-fluid > .row {
-    align-items: stretch;
-}
-
+/* Menjaga susunan card tetap rapi */
+.container-fluid > .row { align-items: stretch; }
 main > .row {
     display: flex;
     flex-wrap: wrap;
     align-items: stretch;
 }
-
 main > .row > [class*="col-"] {
     display: flex;
     flex-direction: column;
     min-width: 0;
     margin-bottom: 20px;
 }
-
 main > .row > [class*="col-"] > .section-card,
 main > .row > [class*="col-"] > .quote-box {
     width: 100%;
@@ -265,30 +233,12 @@ main > .row > [class*="col-"] > .quote-box {
 }
 
 @media (max-width: 767px) {
-    main {
-        padding: 18px !important;
-    }
-
-    .sidebar {
-        min-height: auto;
-    }
-
-    .hero {
-        padding: 25px;
-    }
-
-    .hero h1 {
-        font-size: 27px;
-    }
-
-    main > .row > [class*="col-"] {
-        margin-bottom: 16px;
-    }
-
-    .section-card,
-    .quote-box {
-        height: auto;
-    }
+    main { padding: 18px !important; }
+    .sidebar { min-height: auto; }
+    .hero { padding: 25px; }
+    .hero h1 { font-size: 27px; }
+    main > .row > [class*="col-"] { margin-bottom: 16px; }
+    .section-card, .quote-box { height: auto; }
 }
 </style>
 </head>
@@ -359,14 +309,11 @@ main > .row > [class*="col-"] > .quote-box {
         <p>Kenalan lebih dekat dengan orang di balik project ini ✨</p>
     </div>
 
-    <!-- HERO -->
     <section class="hero mb-4">
         <span class="hero-label">
             <i class="fas fa-heart"></i> WELCOME TO MY PAGE
         </span>
-
-        <h1>Hai, kenalin aku anis khoerunnisa 👋</h1>
-
+        <h1>Hai, kenalin aku Anis Khoerunnisa 👋</h1>
         <p>
             Selamat datang di halaman kecil tentang aku.
             Aku masih terus belajar, mencoba hal baru, dan
@@ -374,10 +321,7 @@ main > .row > [class*="col-"] > .quote-box {
             Buat aku, setiap proses punya cerita dan setiap
             tantangan adalah kesempatan buat jadi lebih baik.
         </p>
-
-        <span class="font-weight-bold">
-            Keep learning, keep growing! 🚀
-        </span>
+        <span class="font-weight-bold">Keep learning, keep growing! 🚀</span>
     </section>
 
     <div class="row">
@@ -385,36 +329,29 @@ main > .row > [class*="col-"] > .quote-box {
         <!-- PROFIL -->
         <div class="col-lg-5 mb-4">
             <div class="section-card">
-                <div class="profile-avatar">
-                    <i class="fas fa-user-astronaut"></i>
+                <div class="profile-photo-wrap">
+                    <img c:\Users\SMKMU\Downloads\foto-anis.jpg>
                 </div>
 
-                <div class="profile-name">Anis khoerunnisa N.R</div>
-                <div class="profile-role mb-4">
-                    Student · Rekayasa Perangkat Lunak
-                </div>
+                <div class="profile-name">Anis Khoerunnisa N.R</div>
+                <div class="profile-role mb-4">Student · Rekayasa Perangkat Lunak</div>
 
                 <div class="info-row">
                     <div class="info-label">NAMA LENGKAP</div>
-                    <div class="info-value">Anis khoerunnisa N.R</div>
+                    <div class="info-value">Anis Khoerunnisa N.R</div>
                 </div>
-
                 <div class="info-row">
                     <div class="info-label">KELAS</div>
                     <div class="info-value">XII RPL 1</div>
                 </div>
-
                 <div class="info-row">
                     <div class="info-label">JURUSAN</div>
                     <div class="info-value">Rekayasa Perangkat Lunak</div>
                 </div>
-
                 <div class="info-row">
                     <div class="info-label">STATUS</div>
                     <div class="info-value">
-                        <span style="color:#31a879;">
-                            ● Still learning &amp; improving
-                        </span>
+                        <span style="color:#31a879;">● Still learning &amp; improving</span>
                     </div>
                 </div>
             </div>
@@ -424,12 +361,9 @@ main > .row > [class*="col-"] > .quote-box {
         <div class="col-lg-7 mb-4">
             <div class="section-card mb-4">
                 <h5>
-                    <span class="mini-icon">
-                        <i class="fas fa-mug-hot"></i>
-                    </span>
+                    <span class="mini-icon"><i class="fas fa-mug-hot"></i></span>
                     A Little About Me
                 </h5>
-
                 <p>
                     Aku adalah siswa RPL yang lagi belajar
                     mengenal dunia coding dan pengembangan website.
@@ -442,12 +376,9 @@ main > .row > [class*="col-"] > .quote-box {
 
             <div class="section-card">
                 <h5>
-                    <span class="mini-icon">
-                        <i class="fas fa-code"></i>
-                    </span>
+                    <span class="mini-icon"><i class="fas fa-code"></i></span>
                     My Project
                 </h5>
-
                 <p>
                     Project UKK-ku adalah
                     <strong>Sistem Pelanggaran Siswa</strong>.
@@ -455,7 +386,6 @@ main > .row > [class*="col-"] > .quote-box {
                     data sekolah dan pencatatan pelanggaran siswa
                     supaya lebih terstruktur dan mudah dikelola.
                 </p>
-
                 <div class="mt-3">
                     <span class="skill-tag">HTML</span>
                     <span class="skill-tag">CSS</span>
@@ -470,12 +400,9 @@ main > .row > [class*="col-"] > .quote-box {
         <div class="col-md-6 mb-4">
             <div class="section-card">
                 <h5>
-                    <span class="mini-icon">
-                        <i class="fas fa-bullseye"></i>
-                    </span>
+                    <span class="mini-icon"><i class="fas fa-bullseye"></i></span>
                     My Goals
                 </h5>
-
                 <p>
                     Aku pengen terus upgrade skill, menambah
                     pengalaman, dan bisa bikin karya yang bukan
@@ -492,26 +419,17 @@ main > .row > [class*="col-"] > .quote-box {
                 <div class="mb-3" style="font-size:30px;color:#a9b5ff;">
                     <i class="fas fa-quote-left"></i>
                 </div>
-
-                <h5 class="font-weight-bold">
-                    Little Steps, Big Dreams ✨
-                </h5>
-
-                <p class="mb-0">
-                    "GASUKA JANJI MANIS SOALNYA AKU UDA MANIS."
-                </p>
+                <h5 class="font-weight-bold">Little Steps, Big Dreams ✨</h5>
+                <p class="mb-0">"GASUKA JANJI MANIS SOALNYA AKU UDA MANIS."</p>
             </div>
         </div>
-
     </div>
 
     <div class="footer">
-        Made with <span style="color:#e8799a;">♥</span>
-        and a little bit of code.
+        Made with <span style="color:#e8799a;">♥</span> and a little bit of code.
         <br>
         Sistem Pelanggaran Siswa &copy; <?= date('Y') ?>
     </div>
-
 </main>
 </div>
 </div>

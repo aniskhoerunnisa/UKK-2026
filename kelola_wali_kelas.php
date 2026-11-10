@@ -1,10 +1,16 @@
-```php
+
 <?php
-// kelola_wali_kelas.php
+// ==========================================
+// KELOLA WALI KELAS
+// ==========================================
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
+// Ambil data wali kelas
 $sql = "SELECT
             w.*,
             k.nama AS nama_kelas,
@@ -17,428 +23,680 @@ $sql = "SELECT
 $hasil = mysqli_query($koneksi, $sql);
 
 if (!$hasil) {
-    die("Query gagal: " . mysqli_error($koneksi));
+    die("Query gagal: " . htmlspecialchars(mysqli_error($koneksi)));
 }
+
+// Menampung data
+$data_wali = [];
+$total_aktif = 0;
+$total_nonaktif = 0;
+
+while ($row = mysqli_fetch_assoc($hasil)) {
+
+    $data_wali[] = $row;
+
+    if ((int)($row['status_aktif'] ?? 0) === 1) {
+        $total_aktif++;
+    } else {
+        $total_nonaktif++;
+    }
+}
+
+$total_wali = count($data_wali);
+
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelola Wali Kelas</title>
 
-    <!-- Bootstrap 4.6.2 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<title>Data Wali Kelas</title>
 
-    <!-- DataTables Bootstrap 4 -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
+<!-- BOOTSTRAP -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 
-    <style>
-        body {
-            background: #f4f6ff;
-            font-family: Arial, sans-serif;
-            font-size: 13px;
-            color: #202b46;
-        }
+<!-- FONT AWESOME -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-        .main-content {
-            margin-left: 200px;
-            padding: 20px;
-            min-height: 100vh;
-        }
+<!-- DATATABLES -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
 
-        .page-title {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #202b46;
-        }
+<style>
 
-        .page-subtitle {
-            color: #687799;
-            font-size: 12px;
-            margin-bottom: 17px;
-        }
+* {
+    box-sizing: border-box;
+}
 
-        .banner {
-            background: linear-gradient(110deg, #5368f2, #8057e9);
-            padding: 22px;
-            border-radius: 14px;
-            color: white;
-            margin-bottom: 17px;
-            box-shadow: 0 7px 18px rgba(83, 104, 242, 0.12);
-        }
+body {
+    background: #f4f6ff;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    color: #202b46;
+    margin: 0;
+}
 
-        .banner small {
-            display: inline-block;
-            background: rgba(255,255,255,0.2);
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 10px;
-            margin-bottom: 8px;
-        }
+/* KONTEN UTAMA */
 
-        .banner h5 {
-            font-weight: bold;
-            font-size: 17px;
-            margin-bottom: 7px;
-        }
+.main-content {
+    margin-left: 282px;
+    padding: 25px;
+    min-height: 100vh;
+}
 
-        .banner p {
-            margin: 0;
-            font-size: 11px;
-        }
+/* JUDUL */
 
-        .section-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
+.page-title {
+    font-size: 23px;
+    font-weight: bold;
+    color: #202b46;
+    margin-bottom: 5px;
+}
 
-        .section-desc {
-            font-size: 12px;
-            color: #687799;
-        }
+.page-subtitle {
+    color: #8995aa;
+    font-size: 12px;
+    margin-bottom: 22px;
+}
 
-        .btn-tambah {
-            background: linear-gradient(110deg, #5368f2, #8057e9);
-            color: white !important;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 13px;
-            font-size: 12px;
-            font-weight: bold;
-        }
+/* BANNER */
 
-        .btn-tambah:hover {
-            opacity: 0.9;
-        }
+.banner {
+    background: linear-gradient(110deg, #5368f2, #9360df);
+    padding: 27px 30px;
+    border-radius: 14px;
+    color: white;
+    margin-bottom: 25px;
+    box-shadow: 0 7px 20px rgba(83,104,242,.15);
+}
 
-        .table-card {
-            background: white;
-            padding: 16px;
-            border-radius: 13px;
-            box-shadow: 0 5px 18px rgba(32, 43, 70, 0.05);
-            margin-top: 18px;
-        }
+.banner-label {
+    display: inline-block;
+    background: rgba(255,255,255,.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 10px;
+    margin-bottom: 10px;
+}
 
-        .table-heading {
-            font-size: 14px;
-            font-weight: bold;
-            color: #202b46;
-            margin-bottom: 5px;
-        }
+.banner h4 {
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
 
-        .table-description {
-            color: #687799;
-            font-size: 11px;
-            margin-bottom: 15px;
-        }
+.banner p {
+    font-size: 12px;
+    margin: 0;
+    opacity: .95;
+}
 
-        #tabelWaliKelas {
-            width: 100% !important;
-            font-size: 10px;
-            color: #344563;
-        }
+/* STATISTIK */
 
-        #tabelWaliKelas thead th {
-            background: #202b46;
-            color: white;
-            border-color: #344563;
-            white-space: nowrap;
-            padding: 10px 8px;
-            vertical-align: middle;
-        }
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 5px 20px rgba(32,43,70,.05);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
 
-        #tabelWaliKelas tbody td {
-            padding: 9px 8px;
-            vertical-align: middle;
-        }
+.stat-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
 
-        .badge-status {
-            background: #20a64b;
-            color: white;
-            border-radius: 20px;
-            padding: 4px 9px;
-            font-size: 9px;
-            font-weight: bold;
-        }
+.icon-purple {
+    background: #eeeaff;
+    color: #7058dc;
+}
 
-        .badge-nonaktif {
-            background: #e63946;
-        }
+.icon-green {
+    background: #e4f8eb;
+    color: #19934a;
+}
 
-        .btn-edit {
-            background: #17a2b8;
-            color: white !important;
-            font-size: 10px;
-            padding: 5px 8px;
-            border-radius: 5px;
-        }
+.icon-red {
+    background: #ffe8e9;
+    color: #dc3545;
+}
 
-        .btn-hapus {
-            background: #e63946;
-            color: white !important;
-            font-size: 10px;
-            padding: 5px 8px;
-            border-radius: 5px;
-        }
+.stat-label {
+    font-size: 11px;
+    color: #8995aa;
+    margin-bottom: 5px;
+}
 
-        .aksi {
-            display: flex;
-            gap: 5px;
-            white-space: nowrap;
-        }
+.stat-number {
+    font-size: 22px;
+    font-weight: bold;
+    color: #202b46;
+    margin: 0;
+}
 
-        .dataTables_wrapper {
-            font-size: 10px;
-        }
+/* DAFTAR WALI KELAS */
 
-        .dataTables_wrapper .dataTables_filter input,
-        .dataTables_wrapper .dataTables_length select {
-            border: 1px solid #dce2f0;
-            border-radius: 5px;
-            padding: 3px 7px;
-            font-size: 10px;
-        }
+.section-title {
+    font-size: 17px;
+    font-weight: bold;
+    color: #202b46;
+    margin-bottom: 5px;
+}
 
-        .dataTables_wrapper .page-item.active .page-link {
-            background: #5965ed;
-            border-color: #5965ed;
-        }
+.section-desc {
+    font-size: 12px;
+    color: #8995aa;
+}
 
-        .dataTables_wrapper .page-link {
-            color: #344563;
-            font-size: 10px;
-        }
+/* TOMBOL TAMBAH */
 
-        .footer-text {
-            margin-top: 18px;
-            font-size: 10px;
-            color: #7182a5;
-        }
+.btn-tambah {
+    background: linear-gradient(110deg, #5368f2, #8057e9);
+    color: white !important;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 12px;
+    font-weight: bold;
+    transition: .2s;
+}
 
-        @media (max-width: 768px) {
-            .main-content {
-                margin-left: 0;
-                padding: 15px;
-            }
+.btn-tambah:hover {
+    opacity: .9;
+    transform: translateY(-1px);
+}
 
-            .banner {
-                padding: 17px;
-            }
-        }
-    </style>
+/* KARTU TABEL */
+
+.table-card {
+    background: white;
+    padding: 22px;
+    border-radius: 13px;
+    box-shadow: 0 5px 20px rgba(32,43,70,.06);
+    margin-top: 15px;
+}
+
+.table-heading {
+    font-size: 15px;
+    font-weight: bold;
+    color: #202b46;
+    margin-bottom: 5px;
+}
+
+.table-description {
+    color: #8995aa;
+    font-size: 11px;
+    margin-bottom: 20px;
+}
+
+/* TABEL */
+
+#tabelWaliKelas {
+    width: 100% !important;
+    font-size: 11px;
+    color: #344563;
+}
+
+#tabelWaliKelas thead th {
+    background: #202b46;
+    color: white;
+    border-color: #344563;
+    white-space: nowrap;
+    padding: 12px 10px;
+    vertical-align: middle;
+}
+
+#tabelWaliKelas tbody td {
+    padding: 11px 10px;
+    vertical-align: middle;
+}
+
+#tabelWaliKelas tbody tr:hover {
+    background: #f5f6ff;
+}
+
+/* STATUS */
+
+.badge-status {
+    display: inline-block;
+    background: #e4f8eb;
+    color: #19934a;
+    border-radius: 20px;
+    padding: 5px 11px;
+    font-size: 10px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.badge-nonaktif {
+    background: #ffe8e9;
+    color: #dc3545;
+}
+
+/* AKSI */
+
+.aksi {
+    display: flex;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.btn-edit {
+    background: #17a2b8;
+    color: white !important;
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 10px;
+    text-decoration: none !important;
+}
+
+.btn-hapus {
+    background: #e63946;
+    color: white !important;
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 10px;
+    text-decoration: none !important;
+}
+
+/* DATATABLES */
+
+.dataTables_wrapper {
+    font-size: 11px;
+    color: #687799;
+}
+
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+    border: 1px solid #dce2f0;
+    border-radius: 6px;
+    padding: 5px 8px;
+    outline: none;
+    font-size: 11px;
+}
+
+.dataTables_wrapper .page-item.active .page-link {
+    background: #625fd5;
+    border-color: #625fd5;
+}
+
+.dataTables_wrapper .page-link {
+    color: #344563;
+    font-size: 11px;
+}
+
+/* FOOTER */
+
+.footer-text {
+    margin-top: 25px;
+    font-size: 10px;
+    color: #8995aa;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+
+    .main-content {
+        margin-left: 0;
+        padding: 15px;
+    }
+
+    .banner {
+        padding: 20px;
+    }
+
+    .table-card {
+        padding: 15px;
+    }
+
+}
+
+</style>
+
 </head>
 
 <body>
 
-    <!-- SIDEBAR -->
-    <?php include 'layout/sidebar.php'; ?>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="logo">
+        <i class="fas fa-layer-group"></i> MyWebsite.
+    </div>
 
-    <!-- KONTEN UTAMA -->
-    <main class="main-content">
 
-        <h1 class="page-title">
-            Kelola Wali Kelas <span style="color:#8057e9;">.</span>
-        </h1>
+
+<!-- KONTEN -->
+<main class="main-content">
+
+    <!-- JUDUL -->
+    <div class="mb-4">
+
+        <h3 class="page-title">
+            Data Wali Kelas
+            <span style="color:#8057e9;">.</span>
+        </h3>
 
         <p class="page-subtitle">
-            Kelola dan pantau seluruh data wali kelas di sekolah ✨
+            Kelola dan pantau data guru yang bertugas sebagai wali kelas.
         </p>
 
-        <!-- BANNER -->
-        <div class="banner">
-            <small><i class="fas fa-user-tie"></i> DATA WALI KELAS</small>
+    </div>
 
-            <h5>
-                <i class="fas fa-chalkboard-teacher"></i>
-                Manajemen Data Wali Kelas
+
+    <!-- BANNER -->
+    <div class="banner">
+
+        <span class="banner-label">
+            <i class="fas fa-user-tie mr-1"></i>
+            DATA WALI KELAS
+        </span>
+
+        <h4>
+            <i class="fas fa-chalkboard-teacher mr-2"></i>
+            Manajemen Data Wali Kelas
+        </h4>
+
+        <p>
+            Halaman untuk melihat, mencari, menambahkan,
+            mengubah, dan menghapus data wali kelas.
+        </p>
+
+    </div>
+
+
+    <!-- STATISTIK -->
+    <div class="row mb-4">
+
+        <div class="col-md-4 mb-3">
+
+            <div class="stat-card">
+
+                <div class="stat-icon icon-purple">
+                    <i class="fas fa-users"></i>
+                </div>
+
+                <div>
+                    <div class="stat-label">Total Wali Kelas</div>
+                    <h4 class="stat-number">
+                        <?= $total_wali; ?>
+                    </h4>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 mb-3">
+
+            <div class="stat-card">
+
+                <div class="stat-icon icon-green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+
+                <div>
+                    <div class="stat-label">Wali Kelas Aktif</div>
+                    <h4 class="stat-number">
+                        <?= $total_aktif; ?>
+                    </h4>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 mb-3">
+
+            <div class="stat-card">
+
+                <div class="stat-icon icon-red">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+
+                <div>
+                    <div class="stat-label">Wali Kelas Tidak Aktif</div>
+                    <h4 class="stat-number">
+                        <?= $total_nonaktif; ?>
+                    </h4>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- JUDUL DAFTAR -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+        <div class="mb-3">
+
+            <h5 class="section-title">
+                Daftar Wali Kelas
             </h5>
 
-            <p>
-                Halaman untuk melihat, mencari, menambahkan, mengubah,
-                dan menghapus data wali kelas.
-            </p>
-        </div>
-
-        <!-- JUDUL DAFTAR -->
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-
-            <div>
-                <h5 class="section-title">Daftar Wali Kelas</h5>
-                <p class="section-desc">
-                    Data wali kelas yang terdaftar dalam sistem.
-                </p>
-            </div>
-
-            <a href="tambah_wali_kelas.php" class="btn btn-tambah mb-3">
-                <i class="fas fa-plus"></i> Tambah Wali Kelas
-            </a>
-
-        </div>
-
-        <!-- TABEL -->
-        <div class="table-card">
-
-            <h6 class="table-heading">
-                <i class="fas fa-list-ul" style="color:#5965ed;"></i>
-                Tabel Data Wali Kelas
-            </h6>
-
-            <p class="table-description">
-                Gunakan kolom pencarian untuk menemukan data wali kelas.
+            <p class="section-desc">
+                Berikut merupakan data wali kelas yang terdaftar dalam sistem.
             </p>
 
-            <div class="table-responsive">
-
-                <table id="tabelWaliKelas"
-                    class="table table-striped table-bordered table-hover">
-
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Tahun Ajaran ID</th>
-                            <th>Kelas</th>
-                            <th>Guru</th>
-                            <th>Tanggal Mulai</th>
-                            <th>Tanggal Selesai</th>
-                            <th>Status Aktif</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        <?php while ($row = mysqli_fetch_assoc($hasil)) { ?>
-
-                            <tr>
-                                <td></td>
-
-                                <td>
-                                    <?= htmlspecialchars((string)($row['tahun_ajaran_id'] ?? '')) ?>
-                                </td>
-
-                                <td>
-                                    <?= htmlspecialchars($row['nama_kelas'] ?? '-') ?>
-                                </td>
-
-                                <td>
-                                    <?= htmlspecialchars($row['nama_guru'] ?? '-') ?>
-                                </td>
-
-                                <td>
-                                    <?= htmlspecialchars($row['tanggal_mulai'] ?? '-') ?>
-                                </td>
-
-                                <td>
-                                    <?= htmlspecialchars($row['tanggal_selesai'] ?? '-') ?>
-                                </td>
-
-                                <td>
-                                    <?php if ((int)($row['status_aktif'] ?? 0) === 1) { ?>
-                                        <span class="badge-status">Aktif</span>
-                                    <?php } else { ?>
-                                        <span class="badge-status badge-nonaktif">Tidak Aktif</span>
-                                    <?php } ?>
-                                </td>
-
-                                <td>
-                                    <div class="aksi">
-
-                                        <a href="edit_wali_kelas.php?id=<?= urlencode((string)$row['id']) ?>"
-                                            class="btn-edit">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </a>
-
-                                        <a href="hapus_wali_kelas.php?id=<?= urlencode((string)$row['id']) ?>"
-                                            class="btn-hapus"
-                                            onclick="return confirm('Yakin ingin menghapus data wali kelas ini?');">
-                                            <i class="fas fa-trash"></i> Hapus
-                                        </a>
-
-                                    </div>
-                                </td>
-
-                            </tr>
-
-                        <?php } ?>
-
-                    </tbody>
-                </table>
-
-            </div>
         </div>
 
-        <div class="footer-text">
-            Sistem Pelanggaran Siswa © 2026
+        <a href="tambah_wali_kelas.php" class="btn btn-tambah mb-3">
+
+            <i class="fas fa-plus mr-1"></i>
+            Tambah Wali Kelas
+
+        </a>
+
+    </div>
+
+
+    <!-- TABEL -->
+    <div class="table-card">
+
+        <h6 class="table-heading">
+            <i class="fas fa-list-ul mr-2" style="color:#625fd5;"></i>
+            Tabel Data Wali Kelas
+        </h6>
+
+        <p class="table-description">
+            Gunakan fitur pencarian untuk menemukan data wali kelas dengan mudah.
+        </p>
+
+
+        <div class="table-responsive">
+
+            <table id="tabelWaliKelas"
+                   class="table table-striped table-bordered table-hover">
+
+                <thead>
+
+                    <tr>
+                        <th width="45">No</th>
+                        <th>ID Tahun Ajaran</th>
+                        <th>Kelas</th>
+                        <th>Nama Guru</th>
+                        <th>Tanggal Mulai</th>
+                        <th>Tanggal Selesai</th>
+                        <th>Status</th>
+                        <th width="120">Aksi</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                <?php foreach ($data_wali as $index => $row) { ?>
+
+                    <tr>
+
+                        <td><?= $index + 1; ?></td>
+
+                        <td>
+                            <?= htmlspecialchars((string)($row['tahun_ajaran_id'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars((string)($row['nama_kelas'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars((string)($row['nama_guru'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars((string)($row['tanggal_mulai'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars((string)($row['tanggal_selesai'] ?? '-'), ENT_QUOTES, 'UTF-8'); ?>
+                        </td>
+
+                        <td>
+
+                            <?php if ((int)($row['status_aktif'] ?? 0) === 1) { ?>
+
+                                <span class="badge-status">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Aktif
+                                </span>
+
+                            <?php } else { ?>
+
+                                <span class="badge-status badge-nonaktif">
+                                    <i class="fas fa-times-circle mr-1"></i>
+                                    Tidak Aktif
+                                </span>
+
+                            <?php } ?>
+
+                        </td>
+
+                        <td>
+
+                            <div class="aksi">
+
+                                <a href="edit_wali_kelas.php?id=<?= (int)$row['id']; ?>"
+                                   class="btn-edit">
+
+                                    <i class="fas fa-edit"></i>
+                                    Edit
+
+                                </a>
+
+                                <a href="hapus_wali_kelas.php?id=<?= (int)$row['id']; ?>"
+                                   class="btn-hapus"
+                                   onclick="return confirm('Yakin ingin menghapus data wali kelas ini?');">
+
+                                    <i class="fas fa-trash"></i>
+                                    Hapus
+
+                                </a>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                <?php } ?>
+
+                </tbody>
+
+            </table>
+
         </div>
 
-    </main>
+    </div>
 
 
-    <!-- JAVASCRIPT -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- FOOTER -->
+    <div class="footer-text">
+        Sistem Pelanggaran Siswa © 2026
+    </div>
 
-    <!-- DATATABLES -->
-    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
+</main>
 
-    <script>
-        $(document).ready(function() {
 
-            $('#tabelWaliKelas').DataTable({
+<!-- JAVASCRIPT -->
 
-                pageLength: 10,
-                lengthMenu: [5, 10, 25, 50, 100],
-                order: [],
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-                columnDefs: [{
-                    targets: [0, 7],
-                    orderable: false,
-                    searchable: false
-                }],
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
-                language: {
-                    search: "Cari:",
-                    searchPlaceholder: "Cari data wali kelas...",
-                    lengthMenu: "Tampilkan _MENU_ data",
-                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                    infoEmpty: "Tidak ada data wali kelas",
-                    infoFiltered: "(difilter dari _MAX_ total data)",
-                    zeroRecords: "Data wali kelas tidak ditemukan",
-                    emptyTable: "Belum ada data wali kelas",
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 
-                    paginate: {
-                        first: "Pertama",
-                        last: "Terakhir",
-                        next: "Berikutnya",
-                        previous: "Sebelumnya"
-                    }
-                },
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
 
-                drawCallback: function() {
-                    var api = this.api();
-                    var info = api.page.info();
 
-                    api.column(0, {
-                        page: 'current'
-                    }).nodes().each(function(cell, i) {
-                        cell.innerHTML = info.start + i + 1;
-                    });
-                }
+<script>
 
-            });
+$(document).ready(function() {
 
-        });
-    </script>
+    $('#tabelWaliKelas').DataTable({
+
+        pageLength: 10,
+
+        lengthMenu: [5, 10, 25, 50, 100],
+
+        order: [],
+
+        columnDefs: [
+            {
+                targets: [0, 7],
+                orderable: false,
+                searchable: false
+            }
+        ],
+
+        language: {
+
+            search: "Cari:",
+
+            searchPlaceholder: "Cari data wali kelas...",
+
+            lengthMenu: "Tampilkan _MENU_ data",
+
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
+            infoEmpty: "Tidak ada data wali kelas",
+
+            infoFiltered: "(difilter dari _MAX_ total data)",
+
+            zeroRecords: "Data wali kelas tidak ditemukan",
+
+            emptyTable: "Belum ada data wali kelas",
+
+            paginate: {
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Berikutnya",
+                previous: "Sebelumnya"
+            }
+
+        }
+
+    });
+
+});
+
+</script>
 
 </body>
 </html>
-```

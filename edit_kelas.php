@@ -3,200 +3,221 @@
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    die("ID kelas tidak valid.");
+// AMBIL ID KELAS
+$id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
+
+if ($id <= 0) {
+    header("Location: kelola_kelas.php?pesan=id_invalid");
+    exit;
 }
 
-$id = (int) $_GET['id'];
+// PROSES UPDATE KELAS
+if (isset($_POST['update'])) {
 
-$stmt = mysqli_prepare($koneksi, "SELECT * FROM t_kelas WHERE id = ?");
+    $nama_kelas = trim($_POST['nama_kelas'] ?? '');
+    $tingkat = trim($_POST['tingkat'] ?? '');
+    $jurusan = trim($_POST['jurusan'] ?? '');
+
+    if ($nama_kelas == '' || $tingkat == '') {
+        $pesan = 'kosong';
+    } else {
+
+        $stmt = mysqli_prepare(
+            $koneksi,
+            "UPDATE t_kelas
+             SET nama_kelas = ?, tingkat = ?, jurusan = ?
+             WHERE id = ?"
+        );
+
+        mysqli_stmt_bind_param(
+            $stmt,
+            "sssi",
+            $nama_kelas,
+            $tingkat,
+            $jurusan,
+            $id
+        );
+
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            header("Location: kelola_kelas.php?pesan=edit");
+            exit;
+        } else {
+            die("Gagal mengubah data: " . mysqli_stmt_error($stmt));
+        }
+    }
+}
+
+// AMBIL DATA KELAS
+$stmt = mysqli_prepare(
+    $koneksi,
+    "SELECT * FROM t_kelas WHERE id = ?"
+);
+
 mysqli_stmt_bind_param($stmt, "i", $id);
 mysqli_stmt_execute($stmt);
 
 $hasil = mysqli_stmt_get_result($stmt);
 $data = mysqli_fetch_assoc($hasil);
 
+mysqli_stmt_close($stmt);
+
 if (!$data) {
     die("Data kelas tidak ditemukan.");
 }
+
+$pesan = $pesan ?? ($_GET['pesan'] ?? '');
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Kelas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Edit Kelas - Sistem Pelanggaran Siswa</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <style>
         body {
-            background: #f4f6ff;
-            font-family: Arial, sans-serif;
-            color: #333;
+            background: #f4f6f9;
         }
 
-        .container-edit {
-            max-width: 850px;
-            margin: 45px auto;
-            padding: 0 15px;
-        }
-
-        .header-edit {
-            background: linear-gradient(135deg, #5965d8, #9365df);
-            color: white;
-            padding: 28px 30px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-        }
-
-        .header-edit h3 {
-            font-weight: bold;
-            margin-bottom: 7px;
+        .content {
+            padding: 25px;
         }
 
         .card {
             border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.07);
         }
 
-        .card-body {
-            padding: 30px;
-        }
-
-        .form-control {
-            height: 43px;
-            border-radius: 7px;
-            border: 1px solid #dce0eb;
-        }
-
-        .form-control:focus {
-            border-color: #7568dc;
-            box-shadow: 0 0 0 3px rgba(117,104,220,0.12);
-        }
-
-        label {
-            font-weight: 600;
-            color: #424b60;
-        }
-
-        .btn {
-            border-radius: 7px;
-            padding: 10px 20px;
-            font-weight: 600;
+        .card-header {
+            background: #fff;
+            font-weight: bold;
+            padding: 15px 20px;
         }
 
         .btn-primary {
-            background: #625fd5;
-            border-color: #625fd5;
+            background: #344767;
+            border-color: #344767;
         }
 
         .btn-primary:hover {
-            background: #514dc0;
-            border-color: #514dc0;
+            background: #24334f;
+            border-color: #24334f;
+        }
+
+        .form-control {
+            border-radius: 6px;
         }
     </style>
 </head>
 
 <body>
 
-<div class="container-edit">
+<div class="container-fluid">
+    <div class="row">
 
-    <div class="header-edit">
-        <h3><i class="fas fa-edit mr-2"></i>Edit Data Kelas</h3>
-        <p class="mb-0">Silakan ubah informasi data kelas di bawah ini.</p>
+        <?php include 'layout/sidebar.php'; ?>
+
+        <main class="col-md-9 col-lg-10 ml-sm-auto content">
+
+            <div class="mb-4">
+                <h3>
+                    <i class="fas fa-school mr-2"></i>
+                    Edit Kelas
+                </h3>
+
+                <p class="text-muted">
+                    Perbarui data kelas pada sistem sekolah.
+                </p>
+            </div>
+
+            <?php if ($pesan == 'kosong') { ?>
+                <div class="alert alert-warning">
+                    Semua kolom wajib diisi!
+                </div>
+            <?php } ?>
+
+            <div class="card">
+
+                <div class="card-header">
+                    <i class="fas fa-edit mr-2"></i>
+                    Form Edit Kelas
+                </div>
+
+                <div class="card-body">
+
+                    <form method="POST" action="edit_kelas.php?id=<?= (int)$data['id']; ?>">
+
+                        <input type="hidden" name="id"
+                               value="<?= (int)$data['id']; ?>">
+
+                        <div class="form-group">
+                            <label>Nama Kelas</label>
+
+                            <input
+                                type="text"
+                                name="nama_kelas"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['nama_kelas'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                placeholder="Masukkan nama kelas"
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tingkat</label>
+
+                            <select name="tingkat" class="form-control" required>
+                                <option value="">-- Pilih Tingkat --</option>
+
+                                <?php foreach (['10', '11', '12'] as $t) { ?>
+                                    <option value="<?= $t; ?>"
+                                        <?= (($data['tingkat'] ?? '') == $t) ? 'selected' : ''; ?>>
+                                        <?= $t; ?>
+                                    </option>
+                                <?php } ?>
+
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Jurusan</label>
+
+                            <input
+                                type="text"
+                                name="jurusan"
+                                class="form-control"
+                                value="<?= htmlspecialchars($data['jurusan'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                placeholder="Masukkan jurusan">
+                        </div>
+
+                        <button type="submit" name="update" class="btn btn-primary">
+                            <i class="fas fa-save mr-1"></i>
+                            Simpan Perubahan
+                        </button>
+
+                        <a href="kelola_kelas.php" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left mr-1"></i>
+                            Kembali
+                        </a>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </main>
+
     </div>
-
-    <div class="card">
-        <div class="card-body">
-
-            <h5 class="font-weight-bold mb-4">
-                <i class="fas fa-school text-primary mr-2"></i>
-                Form Edit Kelas
-            </h5>
-
-            <form action="proses_edit_kelas.php" method="POST">
-
-                <input type="hidden" name="id"
-                       value="<?= htmlspecialchars($data['id']) ?>">
-
-                <div class="form-group">
-                    <label>Nama Kelas</label>
-                    <input type="text"
-                           name="nama"
-                           class="form-control"
-                           value="<?= htmlspecialchars($data['nama']) ?>"
-                           required>
-                </div>
-
-                <div class="form-group">
-                    <label>Tingkat</label>
-                    <select name="tingkat" class="form-control" required>
-                        <option value="">-- Pilih Tingkat --</option>
-
-                        <?php foreach (['X', 'XI', 'XII'] as $t): ?>
-                            <option value="<?= $t ?>"
-                                <?= ($data['tingkat'] == $t) ? 'selected' : '' ?>>
-                                <?= $t ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Jurusan</label>
-                    <select name="jurusan" class="form-control" required>
-                        <option value="">-- Pilih Jurusan --</option>
-
-                        <?php
-                        $daftar_jurusan = ['RPL', 'TKJ', 'TKR', 'TSM', 'BD'];
-
-                        foreach ($daftar_jurusan as $j):
-                        ?>
-                            <option value="<?= $j ?>"
-                                <?= ($data['jurusan'] == $j) ? 'selected' : '' ?>>
-                                <?= $j ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Status Aktif</label>
-                    <select name="status_aktif" class="form-control" required>
-                        <option value="1"
-                            <?= ($data['status_aktif'] == 1) ? 'selected' : '' ?>>
-                            Aktif
-                        </option>
-
-                        <option value="0"
-                            <?= ($data['status_aktif'] == 0) ? 'selected' : '' ?>>
-                            Tidak Aktif
-                        </option>
-                    </select>
-                </div>
-
-                <hr>
-
-                <div class="d-flex justify-content-between">
-                    <a href="kelola_kelas.php" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left mr-1"></i> Kembali
-                    </a>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-1"></i> Update Kelas
-                    </button>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
-
 </div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

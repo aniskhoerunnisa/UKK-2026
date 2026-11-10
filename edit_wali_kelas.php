@@ -1,16 +1,14 @@
-
 <?php
+// edit_wali_kelas.php
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-    die("ID wali kelas tidak valid.");
-}
+$id = (int) ($_GET['id'] ?? 0);
 
-$id = (int) $_GET['id'];
-
-// Ambil data wali kelas
-$stmt = mysqli_prepare($koneksi, "SELECT * FROM t_wali_kelas WHERE id_wali_kelas = ?");
+$stmt = mysqli_prepare(
+    $koneksi,
+    "SELECT * FROM t_wali_kelas WHERE id = ?"
+);
 mysqli_stmt_bind_param($stmt, "i", $id);
 mysqli_stmt_execute($stmt);
 
@@ -18,164 +16,133 @@ $hasil = mysqli_stmt_get_result($stmt);
 $data = mysqli_fetch_assoc($hasil);
 
 if (!$data) {
-    die("Data wali kelas tidak ditemukan.");
+    exit('Data wali kelas tidak ditemukan.');
 }
 
-// Ambil data guru
-$query_guru = mysqli_query($koneksi, "SELECT * FROM t_guru ORDER BY nama ASC");
-
-// Ambil data kelas
-$query_kelas = mysqli_query($koneksi, "SELECT * FROM t_kelas ORDER BY nama ASC");
+$tahun = mysqli_query(
+    $koneksi,
+    "SELECT id, nama FROM t_tahun_ajaran ORDER BY id DESC"
+);
+$kelas = mysqli_query(
+    $koneksi,
+    "SELECT id, nama FROM t_kelas ORDER BY nama ASC"
+);
+$guru = mysqli_query(
+    $koneksi,
+    "SELECT id, nama FROM t_guru ORDER BY nama ASC"
+);
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Wali Kelas</title>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-    <style>
-        body {
-            background: #f4f6ff;
-            font-family: Arial, sans-serif;
-            color: #333;
-        }
-
-        .container-edit {
-            max-width: 850px;
-            margin: 45px auto;
-            padding: 0 15px;
-        }
-
-        .header-edit {
-            background: linear-gradient(135deg, #5965d8, #9365df);
-            color: white;
-            padding: 28px 30px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-        }
-
-        .header-edit h3 {
-            font-weight: bold;
-            margin-bottom: 7px;
-        }
-
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
-        }
-
-        .card-body {
-            padding: 30px;
-        }
-
-        .form-control {
-            height: 43px;
-            border-radius: 7px;
-            border: 1px solid #dce0eb;
-        }
-
-        .form-control:focus {
-            border-color: #7568dc;
-            box-shadow: 0 0 0 3px rgba(117,104,220,0.12);
-        }
-
-        label {
-            font-weight: 600;
-            color: #424b60;
-        }
-
-        .btn {
-            border-radius: 7px;
-            padding: 10px 20px;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background: #625fd5;
-            border-color: #625fd5;
-        }
-
-        .btn-primary:hover {
-            background: #514dc0;
-            border-color: #514dc0;
-        }
-    </style>
 </head>
-
 <body>
 
-<div class="container-edit">
+<h1>Edit Wali Kelas</h1>
 
-    <div class="header-edit">
-        <h3><i class="fas fa-user-edit mr-2"></i>Edit Data Wali Kelas</h3>
-        <p class="mb-0">Silakan ubah informasi data wali kelas di bawah ini.</p>
-    </div>
+<form action="proses_edit_wali_kelas.php" method="POST">
+    <input type="hidden" name="id"
+           value="<?php echo $data['id']; ?>">
 
-    <div class="card">
-        <div class="card-body">
+    <table>
+        <tr>
+            <td>Tahun Ajaran</td>
+            <td>:</td>
+            <td>
+                <select name="tahun_ajaran_id" required>
+                    <?php while ($row = mysqli_fetch_assoc($tahun)) { ?>
+                        <option value="<?php echo $row['id']; ?>"
+                            <?php echo $row['id'] == $data['tahun_ajaran_id']
+                                ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($row['nama']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </td>
+        </tr>
 
-            <h5 class="font-weight-bold mb-4">
-                <i class="fas fa-chalkboard-teacher text-primary mr-2"></i>
-                Form Edit Wali Kelas
-            </h5>
+        <tr>
+            <td>Kelas</td>
+            <td>:</td>
+            <td>
+                <select name="kelas_id" required>
+                    <?php while ($row = mysqli_fetch_assoc($kelas)) { ?>
+                        <option value="<?php echo $row['id']; ?>"
+                            <?php echo $row['id'] == $data['kelas_id']
+                                ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($row['nama']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </td>
+        </tr>
 
-            <form action="proses_edit_wali_kelas.php" method="POST">
+        <tr>
+            <td>Guru</td>
+            <td>:</td>
+            <td>
+                <select name="guru_id" required>
+                    <?php while ($row = mysqli_fetch_assoc($guru)) { ?>
+                        <option value="<?php echo $row['id']; ?>"
+                            <?php echo $row['id'] == $data['guru_id']
+                                ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($row['nama']); ?>
+                        </option>
+                    <?php } ?>
+                </select>
+            </td>
+        </tr>
 
-                <input type="hidden" name="id_wali_kelas"
-                       value="<?= htmlspecialchars($data['id_wali_kelas']) ?>">
+        <tr>
+            <td>Tanggal Mulai</td>
+            <td>:</td>
+            <td>
+                <input type="date" name="tanggal_mulai"
+                    value="<?php echo $data['tanggal_mulai']; ?>"
+                    required>
+            </td>
+        </tr>
 
-                <div class="form-group">
-                    <label>Nama Guru</label>
-                    <select name="id_guru" class="form-control" required>
-                        <option value="">-- Pilih Guru --</option>
+        <tr>
+            <td>Tanggal Selesai</td>
+            <td>:</td>
+            <td>
+                <input type="date" name="tanggal_selesai"
+                    value="<?php echo $data['tanggal_selesai']; ?>"
+                    required>
+            </td>
+        </tr>
 
-                        <?php while ($guru = mysqli_fetch_assoc($query_guru)): ?>
-                            <option value="<?= $guru['id'] ?>"
-                                <?= ($data['id_guru'] == $guru['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($guru['nama']) ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
+        <tr>
+            <td>Status</td>
+            <td>:</td>
+            <td>
+                <select name="status_aktif" required>
+                    <option value="1"
+                        <?php echo $data['status_aktif'] == 1
+                            ? 'selected' : ''; ?>>
+                        Aktif
+                    </option>
+                    <option value="0"
+                        <?php echo $data['status_aktif'] == 0
+                            ? 'selected' : ''; ?>>
+                        Tidak Aktif
+                    </option>
+                </select>
+            </td>
+        </tr>
 
-                <div class="form-group">
-                    <label>Kelas</label>
-                    <select name="id_kelas" class="form-control" required>
-                        <option value="">-- Pilih Kelas --</option>
+        <tr>
+            <td colspan="3">
+                <input type="submit" value="Update">
+            </td>
+        </tr>
+    </table>
+</form>
 
-                        <?php while ($kelas = mysqli_fetch_assoc($query_kelas)): ?>
-                            <option value="<?= $kelas['id'] ?>"
-                                <?= ($data['id_kelas'] == $kelas['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($kelas['nama']) ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-
-                <hr>
-
-                <div class="d-flex justify-content-between">
-                    <a href="kelola_wali_kelas.php" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left mr-1"></i> Kembali
-                    </a>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-1"></i> Update Wali Kelas
-                    </button>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
-
-</div>
+<p><a href="data_wali_kelas.php">Kembali</a></p>
 
 </body>
 </html>
