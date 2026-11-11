@@ -3,372 +3,257 @@
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-// PROSES TAMBAH WALI KELAS
-if (isset($_POST['simpan'])) {
+// Ambil data kelas
+$data_kelas = mysqli_query($koneksi, "SELECT id, nama FROM t_kelas ORDER BY nama ASC");
 
-    $nama = trim($_POST['nama'] ?? '');
-    $nip = trim($_POST['nip'] ?? '');
-    $jenis_kelamin = trim($_POST['jenis_kelamin'] ?? '');
-    $no_hp = trim($_POST['no_hp'] ?? '');
-    $alamat = trim($_POST['alamat'] ?? '');
-    $status_aktif = $_POST['status_aktif'] ?? '';
+// Ambil data guru
+$data_guru = mysqli_query($koneksi, "SELECT id, nama FROM t_guru WHERE status_aktif = 1 ORDER BY nama ASC");
 
-    if (
-        $nama === '' ||
-        $nip === '' ||
-        $jenis_kelamin === '' ||
-        $no_hp === '' ||
-        $alamat === '' ||
-        !in_array($status_aktif, ['0', '1'], true)
-    ) {
-        header("Location: tambah_wali_kelas.php?pesan=kosong");
-        exit;
-    }
-
-    // GANTI nama tabel jika tabel database kamu berbeda
-    $stmt = mysqli_prepare(
-        $koneksi,
-        "INSERT INTO t_wali_kelas
-        (nama, nip, jenis_kelamin, no_hp, alamat, status_aktif)
-        VALUES (?, ?, ?, ?, ?, ?)"
-    );
-
-    if (!$stmt) {
-        die("Query gagal: " . mysqli_error($koneksi));
-    }
-
-    mysqli_stmt_bind_param(
-        $stmt,
-        "sssssi",
-        $nama,
-        $nip,
-        $jenis_kelamin,
-        $no_hp,
-        $alamat,
-        $status_aktif
-    );
-
-    if (mysqli_stmt_execute($stmt)) {
-        mysqli_stmt_close($stmt);
-        header("Location: kelola_wali_kelas.php?pesan=berhasil");
-        exit;
-    } else {
-        die("Gagal menyimpan data: " . mysqli_stmt_error($stmt));
-    }
-}
+// Ambil data tahun ajaran
+$data_tahun = mysqli_query($koneksi, "SELECT id, nama FROM t_tahun_ajaran ORDER BY nama DESC");
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Wali Kelas - Siswa App</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-<title>Tambah Wali Kelas</title>
+    <style>
+        * { box-sizing: border-box; }
 
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+        body {
+            margin: 0;
+            background: #f3f5ff;
+            color: #253451;
+            font-family: Arial, sans-serif;
+        }
 
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        .sidebar {
+            width: 243px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            background: #202b46;
+            padding: 25px 16px;
+            overflow-y: auto;
+        }
 
-<style>
+        .brand {
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 35px;
+            text-align: center;
+        }
 
-body {
-    background: #f4f6f9;
-    font-family: Arial, sans-serif;
-}
+        .menu-title {
+            color: #929db5;
+            font-size: 11px;
+            margin: 22px 10px 10px;
+            text-transform: uppercase;
+        }
 
-.content {
-    padding: 25px;
-    min-height: 100vh;
-}
+        .sidebar a {
+            display: block;
+            color: #c5ccda;
+            text-decoration: none;
+            padding: 11px 13px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
 
-.page-title {
-    color: #202f4d;
-    font-size: 25px;
-    font-weight: bold;
-}
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #5368ed;
+            color: white;
+        }
 
-.page-subtitle {
-    color: #8995aa;
-    font-size: 13px;
-}
+        .sidebar a i { width: 23px; }
 
-.card {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 3px 12px rgba(0,0,0,.07);
-}
+        .main-content {
+            margin-left: 243px;
+            padding: 30px;
+        }
 
-.card-header {
-    background: white;
-    padding: 18px 22px;
-    font-weight: bold;
-    border-bottom: 1px solid #eee;
-}
+        .banner {
+            background: linear-gradient(110deg, #5368ed, #8860e8);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
 
-.card-body {
-    padding: 25px;
-}
+        .banner h3 {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
 
-.form-group label {
-    color: #344767;
-    font-weight: 600;
-    font-size: 13px;
-}
+        .content-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+        }
 
-.form-control {
-    border-radius: 8px;
-    border: 1px solid #e0e4ef;
-    font-size: 13px;
-    padding: 10px 12px;
-}
+        .content-card h5 {
+            font-weight: bold;
+            margin-bottom: 22px;
+        }
 
-.form-control:focus {
-    border-color: #5865ed;
-    box-shadow: 0 0 0 3px rgba(88,101,237,.1);
-}
+        .form-control {
+            border-radius: 8px;
+            height: 43px;
+            border: 1px solid #dce1ee;
+        }
 
-.btn-primary {
-    background: #344767;
-    border-color: #344767;
-    border-radius: 7px;
-}
+        label {
+            font-weight: 600;
+            font-size: 14px;
+        }
 
-.btn-secondary {
-    border-radius: 7px;
-}
+        .btn-primary {
+            background: #5368ed;
+            border-color: #5368ed;
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
 
-@media(max-width:768px) {
-    .content {
-        padding: 15px;
-    }
-}
+        .btn-secondary {
+            border-radius: 8px;
+            padding: 10px 20px;
+        }
 
-</style>
+        @media (max-width: 768px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
 
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container-fluid">
-
-<div class="row">
-
-<!-- SIDEBAR -->
-<?php include 'layout/sidebar.php'; ?>
-
-<!-- KONTEN -->
-<main class="col-md-9 col-lg-10 ml-sm-auto content">
-
-    <!-- HEADER -->
-    <div class="mb-4">
-
-        <h3 class="page-title">
-            <i class="fas fa-user-plus mr-2"></i>
-            Tambah Wali Kelas
-        </h3>
-
-        <p class="page-subtitle">
-            Tambahkan data wali kelas ke dalam sistem sekolah.
-        </p>
-
+<div class="sidebar">
+    <div class="brand">
+        <i class="fas fa-graduation-cap"></i> SISWA APP
     </div>
 
-    <!-- NOTIFIKASI -->
-    <?php if (isset($_GET['pesan']) && $_GET['pesan'] == 'kosong') { ?>
-
-        <div class="alert alert-warning alert-dismissible fade show">
-
-            <i class="fas fa-exclamation-circle mr-2"></i>
-            Semua kolom wajib diisi!
-
-            <button type="button" class="close" data-dismiss="alert">
-                <span>&times;</span>
-            </button>
-
-        </div>
-
-    <?php } ?>
-
-    <!-- FORM TAMBAH -->
-    <div class="card">
-
-        <div class="card-header">
-
-            <i class="fas fa-user-tie mr-2"></i>
-            Form Data Wali Kelas
-
-        </div>
-
-        <div class="card-body">
-
-            <form method="POST" action="tambah_wali_kelas.php">
-
-                <div class="row">
-
-                    <!-- NAMA -->
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>Nama Wali Kelas</label>
-
-                            <input
-                                type="text"
-                                name="nama"
-                                class="form-control"
-                                placeholder="Masukkan nama wali kelas"
-                                required>
-
-                        </div>
-
-                    </div>
-
-                    <!-- NIP -->
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>NIP</label>
-
-                            <input
-                                type="text"
-                                name="nip"
-                                class="form-control"
-                                placeholder="Masukkan NIP"
-                                required>
-
-                        </div>
-
-                    </div>
-
-                    <!-- JENIS KELAMIN -->
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>Jenis Kelamin</label>
-
-                            <select
-                                name="jenis_kelamin"
-                                class="form-control"
-                                required>
-
-                                <option value="">-- Pilih Jenis Kelamin --</option>
-
-                                <option value="Laki-laki">Laki-laki</option>
-
-                                <option value="Perempuan">Perempuan</option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                    <!-- NO HP -->
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>Nomor HP</label>
-
-                            <input
-                                type="text"
-                                name="no_hp"
-                                class="form-control"
-                                placeholder="Masukkan nomor HP"
-                                required>
-
-                        </div>
-
-                    </div>
-
-                    <!-- ALAMAT -->
-                    <div class="col-md-12">
-
-                        <div class="form-group">
-
-                            <label>Alamat</label>
-
-                            <textarea
-                                name="alamat"
-                                class="form-control"
-                                rows="3"
-                                placeholder="Masukkan alamat lengkap"
-                                required></textarea>
-
-                        </div>
-
-                    </div>
-
-                    <!-- STATUS -->
-                    <div class="col-md-6">
-
-                        <div class="form-group">
-
-                            <label>Status Aktif</label>
-
-                            <select
-                                name="status_aktif"
-                                class="form-control"
-                                required>
-
-                                <option value="1">Aktif</option>
-
-                                <option value="0">Tidak Aktif</option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <hr>
-
-                <!-- BUTTON -->
-                <div class="d-flex justify-content-end">
-
-                    <a href="kelola_wali_kelas.php"
-                       class="btn btn-secondary mr-2">
-
-                        <i class="fas fa-arrow-left mr-1"></i>
-                        Kembali
-
-                    </a>
-
-                    <button
-                        type="submit"
-                        name="simpan"
-                        class="btn btn-primary">
-
-                        <i class="fas fa-save mr-1"></i>
-                        Simpan Data
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
+    <div class="menu-title">Menu Utama</div>
+    <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
+
+    <div class="menu-title">Master Data</div>
+    <a href="kelola_siswa.php"><i class="fas fa-user-graduate"></i> Kelola Siswa</a>
+    <a href="kelola_guru.php"><i class="fas fa-chalkboard-teacher"></i> Kelola Guru</a>
+    <a href="kelola_wali_kelas.php" class="active"><i class="fas fa-user-tie"></i> Kelola Wali Kelas</a>
+    <a href="kelola_kelas.php"><i class="fas fa-school"></i> Kelola Kelas</a>
+    <a href="kelola_tahun_ajaran.php"><i class="fas fa-calendar-alt"></i> Tahun Ajaran</a>
+    <a href="penempatan_siswa.php"><i class="fas fa-users"></i> Penempatan Siswa</a>
+
+    <div class="menu-title">Pelanggaran</div>
+    <a href="kelola_pelanggaran_kategori.php"><i class="fas fa-list"></i> Kategori Pelanggaran</a>
+    <a href="kelola_jenis_pelanggaran.php"><i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran</a>
+    <a href="laporan.php"><i class="fas fa-file-alt"></i> Laporan</a>
+
+    <div class="menu-title">Lainnya</div>
+    <a href="about_me.php"><i class="fas fa-info-circle"></i> About Me</a>
+    <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+
+<div class="main-content">
+
+    <div class="banner">
+        <h3>Tambah Wali Kelas</h3>
+        <p class="mb-0">Tambahkan data wali kelas baru ke dalam sistem.</p>
     </div>
 
-</main>
+    <div class="content-card">
+        <h5><i class="fas fa-user-plus mr-2"></i> Form Tambah Wali Kelas</h5>
+
+        <form action="proses_tambah_wali_kelas.php" method="POST">
+
+            <div class="form-group">
+                <label>Tahun Ajaran</label>
+                <select name="tahun_ajaran_id" class="form-control" required>
+                    <option value="">-- Pilih Tahun Ajaran --</option>
+                    <?php while ($tahun = mysqli_fetch_assoc($data_tahun)) : ?>
+                        <option value="<?= htmlspecialchars($tahun['id']); ?>">
+                            <?= htmlspecialchars($tahun['nama']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Kelas</label>
+                <select name="kelas_id" class="form-control" required>
+                    <option value="">-- Pilih Kelas --</option>
+                    <?php while ($kelas = mysqli_fetch_assoc($data_kelas)) : ?>
+                        <option value="<?= htmlspecialchars($kelas['id']); ?>">
+                            <?= htmlspecialchars($kelas['nama']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Guru</label>
+                <select name="guru_id" class="form-control" required>
+                    <option value="">-- Pilih Guru --</option>
+                    <?php while ($guru = mysqli_fetch_assoc($data_guru)) : ?>
+                        <option value="<?= htmlspecialchars($guru['id']); ?>">
+                            <?= htmlspecialchars($guru['nama']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Tanggal Mulai</label>
+                <input type="date" name="tanggal_mulai" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label>Tanggal Selesai</label>
+                <input type="date" name="tanggal_selesai" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label>Status</label>
+                <select name="status_aktif" class="form-control" required>
+                    <option value="">-- Pilih Status --</option>
+                    <option value="1">Aktif</option>
+                    <option value="0">Tidak Aktif</option>
+                </select>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-1"></i> Simpan Data
+                </button>
+
+                <a href="kelola_wali_kelas.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali
+                </a>
+            </div>
+
+        </form>
+    </div>
 
 </div>
-</div>
-
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
 </html>

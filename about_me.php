@@ -1,3 +1,4 @@
+
 <?php
 include 'includes/cek_session.php';
 ?>
@@ -5,433 +6,393 @@ include 'includes/cek_session.php';
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>About Me - Sistem Pelanggaran Siswa</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>About Me</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-<style>
-* { box-sizing: border-box; }
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-body {
-    margin: 0;
-    background: #f5f7ff;
-    font-family: 'Segoe UI', sans-serif;
-    color: #26324b;
-}
+        body {
+            margin: 0;
+            background: #f4f6ff;
+            font-family: Arial, sans-serif;
+            color: #26324b;
+        }
 
-.sidebar {
-    min-height: 100vh;
-    background: #202b46;
-    padding: 25px 15px !important;
-}
+        .sidebar {
+            width: 243px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #202b46;
+            color: white;
+            padding: 25px 16px;
+            overflow-y: auto;
+        }
 
-.brand {
-    color: white;
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 35px;
-}
-.brand span { color: #91a7ff; }
+        .brand {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 12px 30px;
+        }
 
-.sidebar .nav-link {
-    color: #c4cce0;
-    padding: 12px 15px;
-    border-radius: 10px;
-    margin-bottom: 7px;
-    transition: .2s;
-}
-.sidebar .nav-link i { width: 25px; }
-.sidebar .nav-link:hover,
-.sidebar .nav-link.active {
-    background: #5268e8;
-    color: white;
-}
+        .menu-title {
+            font-size: 11px;
+            color: #929db5;
+            margin: 18px 12px 10px;
+            text-transform: uppercase;
+        }
 
-main {
-    padding: 30px !important;
-    min-width: 0;
-}
+        .sidebar a {
+            display: block;
+            color: #c4ccdc;
+            text-decoration: none;
+            padding: 12px 13px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
 
-.top-title { margin-bottom: 25px; }
-.top-title h2 {
-    font-weight: 750;
-    color: #202b46;
-}
-.top-title p { color: #8490a8; }
+        .sidebar a i {
+            width: 23px;
+        }
 
-.hero {
-    position: relative;
-    overflow: hidden;
-    border-radius: 22px;
-    padding: 38px;
-    color: white;
-    background: linear-gradient(120deg, #5268e8, #8264e8);
-    box-shadow: 0 12px 30px rgba(82,104,232,.18);
-}
-.hero:after {
-    content: "";
-    position: absolute;
-    width: 220px;
-    height: 220px;
-    border: 35px solid rgba(255,255,255,.09);
-    border-radius: 50%;
-    right: -55px;
-    top: -75px;
-    pointer-events: none;
-}
-.hero h1 {
-    position: relative;
-    font-weight: 800;
-    font-size: 34px;
-}
-.hero p {
-    position: relative;
-    max-width: 550px;
-    line-height: 1.8;
-    color: #f0efff;
-}
-.hero-label {
-    position: relative;
-    display: inline-block;
-    background: rgba(255,255,255,.17);
-    border-radius: 30px;
-    padding: 7px 14px;
-    font-size: 12px;
-    margin-bottom: 15px;
-}
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #5368ed;
+            color: white;
+        }
 
-.section-card {
-    background: white;
-    border-radius: 18px;
-    padding: 25px;
-    height: 100%;
-    min-width: 0;
-    border: 1px solid #edf0f8;
-    box-shadow: 0 6px 20px rgba(35,48,85,.04);
-    overflow-wrap: anywhere;
-}
-.section-card h5 {
-    font-weight: 750;
-    margin-bottom: 15px;
-}
-.section-card p {
-    color: #7b879e;
-    line-height: 1.8;
-    margin-bottom: 0;
-}
+        .main-content {
+            margin-left: 243px;
+            padding: 35px;
+        }
 
-/* Foto profil */
-.profile-photo-wrap {
-    width: 126px;
-    height: 126px;
-    padding: 5px;
-    margin-bottom: 18px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #5268e8, #a18aff, #e6b8ff);
-    box-shadow: 0 7px 18px rgba(82,104,232,.22);
-}
-.profile-photo {
-    display: block;
-    width: 100%;
-    height: 100%;
-    border: 4px solid #fff;
-    border-radius: 50%;
-    object-fit: cover;
-    object-position: center 35%;
-    background: #eef0ff;
-}
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
 
-.profile-name {
-    font-size: 23px;
-    font-weight: 750;
-}
-.profile-role {
-    color: #7d8aa4;
-    font-size: 14px;
-}
+        .subtitle {
+            color: #8790a5;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
 
-.info-row {
-    padding: 13px 0;
-    border-bottom: 1px solid #eef0f6;
-}
-.info-row:last-child { border-bottom: none; }
-.info-label {
-    color: #8a95aa;
-    font-size: 12px;
-    margin-bottom: 4px;
-}
-.info-value {
-    font-weight: 600;
-    overflow-wrap: anywhere;
-}
+        .welcome-box {
+            background: linear-gradient(110deg, #5368ed, #8170ed);
+            color: white;
+            padding: 27px 30px;
+            border-radius: 13px;
+            margin-bottom: 25px;
+        }
 
-.mini-icon {
-    display: inline-flex;
-    width: 40px;
-    height: 40px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: #eef0ff;
-    color: #596be8;
-    margin-right: 10px;
-    flex-shrink: 0;
-}
-.skill-tag {
-    display: inline-block;
-    padding: 9px 13px;
-    background: #f0f2ff;
-    color: #596be8;
-    border-radius: 9px;
-    margin: 4px;
-    font-size: 13px;
-    font-weight: 600;
-}
-.quote-box {
-    background: #202b46;
-    color: white;
-    border-radius: 18px;
-    padding: 27px;
-    height: 100%;
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-.quote-box h5 { line-height: 1.5; }
-.quote-box p {
-    color: #dce2f5;
-    line-height: 1.8;
-}
-.footer {
-    text-align: center;
-    color: #9aa4b8;
-    padding-top: 12px;
-    padding-bottom: 10px;
-    font-size: 13px;
-}
+        .welcome-box h4 {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
 
-/* Menjaga susunan card tetap rapi */
-.container-fluid > .row { align-items: stretch; }
-main > .row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: stretch;
-}
-main > .row > [class*="col-"] {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    margin-bottom: 20px;
-}
-main > .row > [class*="col-"] > .section-card,
-main > .row > [class*="col-"] > .quote-box {
-    width: 100%;
-    height: 100%;
-    flex: 1 1 auto;
-}
+        .welcome-box p {
+            margin: 0;
+            font-size: 14px;
+        }
 
-@media (max-width: 767px) {
-    main { padding: 18px !important; }
-    .sidebar { min-height: auto; }
-    .hero { padding: 25px; }
-    .hero h1 { font-size: 27px; }
-    main > .row > [class*="col-"] { margin-bottom: 16px; }
-    .section-card, .quote-box { height: auto; }
-}
-</style>
+        .profile-card,
+        .info-card {
+            background: white;
+            border-radius: 13px;
+            padding: 28px;
+            box-shadow: 0 3px 15px rgba(30,45,80,.04);
+            margin-bottom: 22px;
+        }
+
+        .profile-card {
+            text-align: center;
+            padding: 40px 25px;
+        }
+
+        .profile-icon {
+            width: 115px;
+            height: 115px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5368ed, #8170ed);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 55px;
+            margin: 0 auto 20px;
+        }
+
+        .profile-card h3 {
+            font-size: 23px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .profile-card .role {
+            color: #5368ed;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .profile-card .bio {
+            color: #8992a5;
+            font-size: 14px;
+            line-height: 1.8;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .info-card h5 {
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #edf0f7;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 9px;
+            background: #eef0ff;
+            color: #5368ed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        .info-item small {
+            color: #929bad;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .info-item strong {
+            font-size: 14px;
+            color: #26324b;
+        }
+
+        .project-card {
+            background: white;
+            padding: 25px;
+            border-radius: 13px;
+            box-shadow: 0 3px 15px rgba(30,45,80,.04);
+            height: 100%;
+        }
+
+        .project-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 11px;
+            background: #eef0ff;
+            color: #5368ed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            margin-bottom: 17px;
+        }
+
+        .project-card h5 {
+            font-weight: bold;
+            font-size: 17px;
+        }
+
+        .project-card p {
+            color: #8992a5;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-bottom: 0;
+        }
+
+        .footer {
+            text-align: center;
+            color: #929bad;
+            font-size: 12px;
+            padding: 20px 0 5px;
+        }
+
+        @media(max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 
 <body>
-<div class="container-fluid">
-<div class="row">
 
 <!-- SIDEBAR -->
-<aside class="col-md-3 col-lg-2 sidebar">
+<div class="sidebar">
     <div class="brand">
-        <i class="fas fa-layer-group"></i>
-        My<span>Website.</span>
+        <i class="fas fa-graduation-cap mr-2"></i> SISWA APP
     </div>
 
-    <p class="text-uppercase small text-secondary mb-3">Menu Utama</p>
+    <div class="menu-title">Menu Utama</div>
+    <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
 
-    <ul class="nav flex-column">
-        <li class="nav-item">
-            <a href="dashboard.php" class="nav-link">
-                <i class="fas fa-th-large"></i> Dashboard
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="kelola_siswa.php" class="nav-link">
-                <i class="fas fa-user-graduate"></i> Kelola Siswa
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="kelola_guru.php" class="nav-link">
-                <i class="fas fa-chalkboard-teacher"></i> Kelola Guru
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="kelola_wali_kelas.php" class="nav-link">
-                <i class="fas fa-user-tie"></i> Wali Kelas
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="kelola_kelas.php" class="nav-link">
-                <i class="fas fa-school"></i> Kelola Kelas
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="kelola_tahun_ajaran.php" class="nav-link">
-                <i class="fas fa-calendar-alt"></i> Tahun Ajaran
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="about_me.php" class="nav-link active">
-                <i class="fas fa-user-circle"></i> About Me
-            </a>
-        </li>
-    </ul>
+    <div class="menu-title">Master Data</div>
+    <a href="kelola_siswa.php"><i class="fas fa-user-graduate"></i> Kelola Siswa</a>
+    <a href="kelola_guru.php"><i class="fas fa-chalkboard-teacher"></i> Kelola Guru</a>
+    <a href="kelola_wali_kelas.php"><i class="fas fa-user-tie"></i> Wali Kelas</a>
+    <a href="kelola_kelas.php"><i class="fas fa-school"></i> Kelola Kelas</a>
+    <a href="kelola_tahun_ajaran.php"><i class="fas fa-calendar-alt"></i> Tahun Ajaran</a>
+    <a href="penempatan_siswa.php"><i class="fas fa-users"></i> Penempatan Siswa</a>
 
-    <hr style="border-color:#3c4761;">
+    <div class="menu-title">Pelanggaran</div>
+    <a href="kelola_pelanggaran_kategori.php"><i class="fas fa-list-alt"></i> Kategori Pelanggaran</a>
+    <a href="kelola_jenis_pelanggaran.php"><i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran</a>
+    <a href="laporan.php"><i class="fas fa-file-alt"></i> Laporan</a>
 
-    <a href="logout.php" class="nav-link text-danger">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
-</aside>
+    <div class="menu-title">Lainnya</div>
+    <a href="about_me.php" class="active"><i class="fas fa-user"></i> About Me</a>
+    <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
 
-<!-- KONTEN UTAMA -->
-<main class="col-md-9 col-lg-10">
+<!-- KONTEN -->
+<div class="main-content">
 
-    <div class="top-title">
-        <h2>About Me <span style="color:#6575e8;">.</span></h2>
-        <p>Kenalan lebih dekat dengan orang di balik project ini ✨</p>
+    <h2 class="page-title">About Me</h2>
+    <p class="subtitle">Informasi mengenai pengembang sistem.</p>
+
+    <div class="welcome-box">
+        <h4><i class="fas fa-user-circle mr-2"></i> Tentang Anis Khoerunnisa N.R</h4>
+        <p>Kenali lebih dekat pengembang Sistem Pelanggaran Siswa.</p>
     </div>
-
-    <section class="hero mb-4">
-        <span class="hero-label">
-            <i class="fas fa-heart"></i> WELCOME TO MY PAGE
-        </span>
-        <h1>Hai, kenalin aku Anis Khoerunnisa 👋</h1>
-        <p>
-            Selamat datang di halaman kecil tentang aku.
-            Aku masih terus belajar, mencoba hal baru, dan
-            mengembangkan kemampuan di dunia teknologi.
-            Buat aku, setiap proses punya cerita dan setiap
-            tantangan adalah kesempatan buat jadi lebih baik.
-        </p>
-        <span class="font-weight-bold">Keep learning, keep growing! 🚀</span>
-    </section>
 
     <div class="row">
 
         <!-- PROFIL -->
-        <div class="col-lg-5 mb-4">
-            <div class="section-card">
-                <div class="profile-photo-wrap">
-                    <img c:\Users\SMKMU\Downloads\foto-anis.jpg>
+        <div class="col-lg-5">
+            <div class="profile-card">
+                <div class="profile-icon">
+                    <i class="fas fa-user"></i>
                 </div>
 
-                <div class="profile-name">Anis Khoerunnisa N.R</div>
-                <div class="profile-role mb-4">Student · Rekayasa Perangkat Lunak</div>
+                <h3>Nama Anis Khoerunnisa N.R</h3>
+                <div class="role">Web Developer</div>
 
-                <div class="info-row">
-                    <div class="info-label">NAMA LENGKAP</div>
-                    <div class="info-value">Anis Khoerunnisa N.R</div>
+                <p class="bio">
+                    Saya merupakan seorang pelajar Rekayasa Perangkat Lunak
+                    yang tertarik pada dunia teknologi, pemrograman,
+                    dan pengembangan aplikasi berbasis web.
+                </p>
+            </div>
+        </div>
+
+        <!-- INFORMASI -->
+        <div class="col-lg-7">
+            <div class="info-card">
+                <h5><i class="fas fa-id-card mr-2" style="color:#5368ed;"></i> Informasi Profil</h5>
+
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <small>Nama</small>
+                        <strong>Anis Khoerunnisa N.R</strong>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">KELAS</div>
-                    <div class="info-value">XII RPL 1</div>
+
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <small>Jurusan</small>
+                        <strong>Rekayasa Perangkat Lunak (RPL)</strong>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">JURUSAN</div>
-                    <div class="info-value">Rekayasa Perangkat Lunak</div>
+
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-school"></i>
+                    </div>
+                    <div>
+                        <small>Sekolah</small>
+                        <strong>SMK MUHAMMADIYAH</strong>
+                    </div>
                 </div>
-                <div class="info-row">
-                    <div class="info-label">STATUS</div>
-                    <div class="info-value">
-                        <span style="color:#31a879;">● Still learning &amp; improving</span>
+
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-laptop-code"></i>
+                    </div>
+                    <div>
+                        <small>Keahlian</small>
+                        <strong>PHP, MySQL, HTML, CSS, JavaScript</strong>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- CERITA -->
-        <div class="col-lg-7 mb-4">
-            <div class="section-card mb-4">
-                <h5>
-                    <span class="mini-icon"><i class="fas fa-mug-hot"></i></span>
-                    A Little About Me
-                </h5>
-                <p>
-                    Aku adalah siswa RPL yang lagi belajar
-                    mengenal dunia coding dan pengembangan website.
-                    Kadang ada error yang bikin pusing, kadang
-                    ada hal baru yang bikin penasaran, tapi justru
-                    dari situ aku belajar buat lebih teliti dan
-                    nggak gampang nyerah. 😆
-                </p>
-            </div>
+    </div>
 
-            <div class="section-card">
-                <h5>
-                    <span class="mini-icon"><i class="fas fa-code"></i></span>
-                    My Project
-                </h5>
-                <p>
-                    Project UKK-ku adalah
-                    <strong>Sistem Pelanggaran Siswa</strong>.
-                    Website ini dibuat untuk membantu pengelolaan
-                    data sekolah dan pencatatan pelanggaran siswa
-                    supaya lebih terstruktur dan mudah dikelola.
-                </p>
-                <div class="mt-3">
-                    <span class="skill-tag">HTML</span>
-                    <span class="skill-tag">CSS</span>
-                    <span class="skill-tag">PHP</span>
-                    <span class="skill-tag">MySQL</span>
-                    <span class="skill-tag">Bootstrap</span>
+    <!-- INFORMASI PROJECT -->
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <div class="project-card">
+                <div class="project-icon">
+                    <i class="fas fa-project-diagram"></i>
                 </div>
-            </div>
-        </div>
-
-        <!-- MY GOALS -->
-        <div class="col-md-6 mb-4">
-            <div class="section-card">
-                <h5>
-                    <span class="mini-icon"><i class="fas fa-bullseye"></i></span>
-                    My Goals
-                </h5>
+                <h5>Proyek yang Dikembangkan</h5>
                 <p>
-                    Aku pengen terus upgrade skill, menambah
-                    pengalaman, dan bisa bikin karya yang bukan
-                    cuma keren dilihat, tapi juga bermanfaat.
-                    Nggak harus langsung jago, yang penting
-                    berani mulai dan mau terus belajar. 🌱
+                    Sistem Pelanggaran Siswa merupakan aplikasi berbasis web
+                    yang dibuat untuk membantu sekolah dalam mengelola data
+                    dan pencatatan pelanggaran siswa.
                 </p>
             </div>
         </div>
 
-        <!-- MOTTO -->
-        <div class="col-md-6 mb-4">
-            <div class="quote-box">
-                <div class="mb-3" style="font-size:30px;color:#a9b5ff;">
-                    <i class="fas fa-quote-left"></i>
+        <div class="col-md-6 mb-3">
+            <div class="project-card">
+                <div class="project-icon">
+                    <i class="fas fa-code"></i>
                 </div>
-                <h5 class="font-weight-bold">Little Steps, Big Dreams ✨</h5>
-                <p class="mb-0">"GASUKA JANJI MANIS SOALNYA AKU UDA MANIS."</p>
+                <h5>Teknologi yang Digunakan</h5>
+                <p>
+                    Aplikasi ini dikembangkan menggunakan PHP Native,
+                    MySQL sebagai database, serta HTML, CSS, Bootstrap,
+                    dan JavaScript untuk tampilan antarmuka.
+                </p>
             </div>
         </div>
     </div>
 
     <div class="footer">
-        Made with <span style="color:#e8799a;">♥</span> and a little bit of code.
-        <br>
-        Sistem Pelanggaran Siswa &copy; <?= date('Y') ?>
+        © 2026 Sistem Pelanggaran Siswa. All Rights Reserved.
     </div>
-</main>
+
 </div>
-</div>
+
 </body>
 </html>

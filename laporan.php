@@ -1,62 +1,61 @@
+
 <?php
-// laporan.php
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-// Export Excel
-if (isset($_GET['export']) && $_GET['export'] === 'excel') {
-    $sqlExcel = "
-        SELECT s.nis, s.nama AS nama_siswa, p.kode,
-               p.nama AS nama_pelanggaran, p.poin
-        FROM t_pelanggaran_siswa ps
-        JOIN t_siswa s ON ps.siswa_id = s.id
-        JOIN t_pelanggaran p ON ps.pelanggaran_id = p.id
-        ORDER BY ps.id DESC
-    ";
+// FILTER TANGGAL
+$tanggal_mulai = $_GET['tanggal_mulai'] ?? '';
+$tanggal_selesai = $_GET['tanggal_selesai'] ?? '';
 
-    $dataExcel = mysqli_query($koneksi, $sqlExcel);
-    if (!$dataExcel) {
-        die('Gagal mengambil data: ' . htmlspecialchars(mysqli_error($koneksi), ENT_QUOTES, 'UTF-8'));
-    }
+$where = " WHERE 1=1 ";
 
-    header('Content-Type: application/vnd.ms-excel; charset=utf-8');
-    header('Content-Disposition: attachment; filename=laporan_pelanggaran.xls');
-    header('Pragma: no-cache');
-    header('Expires: 0');
-
-    echo "\xEF\xBB\xBF";
-    echo '<table border="1">';
-    echo '<tr><th>No</th><th>NIS</th><th>Nama Siswa</th><th>Kode Pelanggaran</th><th>Jenis Pelanggaran</th><th>Poin</th></tr>';
-
-    $no = 1;
-    while ($row = mysqli_fetch_assoc($dataExcel)) {
-        echo '<tr>';
-        echo '<td>' . $no++ . '</td>';
-        echo '<td>' . htmlspecialchars((string)$row['nis'], ENT_QUOTES, 'UTF-8') . '</td>';
-        echo '<td>' . htmlspecialchars((string)$row['nama_siswa'], ENT_QUOTES, 'UTF-8') . '</td>';
-        echo '<td>' . htmlspecialchars((string)($row['kode'] ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
-        echo '<td>' . htmlspecialchars((string)$row['nama_pelanggaran'], ENT_QUOTES, 'UTF-8') . '</td>';
-        echo '<td>' . (int)$row['poin'] . '</td>';
-        echo '</tr>';
-    }
-    echo '</table>';
-    mysqli_free_result($dataExcel);
-    exit;
+if ($tanggal_mulai != '') {
+    $mulai = mysqli_real_escape_string($koneksi, $tanggal_mulai);
+    $where .= " AND DATE(created_at) >= '$mulai' ";
 }
 
-// Data laporan
-$sql = "
-    SELECT ps.id, s.nis, s.nama AS nama_siswa, p.kode,
-           p.nama AS nama_pelanggaran, p.poin
-    FROM t_pelanggaran_siswa ps
-    JOIN t_siswa s ON ps.siswa_id = s.id
-    JOIN t_pelanggaran p ON ps.pelanggaran_id = p.id
-    ORDER BY ps.id DESC
-";
-$hasil = mysqli_query($koneksi, $sql);
-if (!$hasil) {
-    die('Gagal mengambil laporan: ' . htmlspecialchars(mysqli_error($koneksi), ENT_QUOTES, 'UTF-8'));
+if ($tanggal_selesai != '') {
+    $selesai = mysqli_real_escape_string($koneksi, $tanggal_selesai);
+    $where .= " AND DATE(created_at) <= '$selesai' ";
 }
+
+// AMBIL DATA LAPORAN
+$sql = "SELECT * FROM t_pelanggaran
+        $where
+        ORDER BY created_at DESC";
+
+$query = mysqli_query($koneksi, $sql);
+
+if (!$query) {
+    die("Gagal mengambil laporan: " . mysqli_error($koneksi));
+}
+
+// STATISTIK SESUAI FILTER
+$total = mysqli_num_rows($query);
+
+$sqlAktif = "SELECT COUNT(*) AS jumlah
+             FROM t_pelanggaran
+             $where AND status_aktif = 1";
+
+$sqlNonaktif = "SELECT COUNT(*) AS jumlah
+                FROM t_pelanggaran
+                $where AND status_aktif = 0";
+
+$sqlPoin = "SELECT COALESCE(SUM(poin), 0) AS jumlah
+            FROM t_pelanggaran
+            $where";
+
+$qAktif = mysqli_query($koneksi, $sqlAktif);
+$qNonaktif = mysqli_query($koneksi, $sqlNonaktif);
+$qPoin = mysqli_query($koneksi, $sqlPoin);
+
+if (!$qAktif || !$qNonaktif || !$qPoin) {
+    die("Gagal mengambil statistik: " . mysqli_error($koneksi));
+}
+
+$aktif = mysqli_fetch_assoc($qAktif)['jumlah'];
+$nonaktif = mysqli_fetch_assoc($qNonaktif)['jumlah'];
+$totalPoin = mysqli_fetch_assoc($qPoin)['jumlah'];
 ?>
 
 <!DOCTYPE html>
@@ -64,287 +63,412 @@ if (!$hasil) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Laporan Pelanggaran Siswa</title>
+    <title>Laporan Pelanggaran</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
 
     <style>
         * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            background: #f4f5fb;
-            color: #343a50;
-            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f4f6ff;
+            font-family: Arial, sans-serif;
+            color: #26324b;
         }
 
-        /* Konten tetap sejajar dengan sidebar dan tidak turun ke baris baru */
-        .container-fluid { padding: 0; }
-        .page-row {
-            display: flex;
-            flex-wrap: nowrap;
-            align-items: stretch;
-            min-height: 100vh;
-            margin: 0;
-        }
-        main.page-content {
-            flex: 1 1 auto;
-            min-width: 0;
-            width: auto;
-            padding: 30px !important;
+        .sidebar {
+            width: 243px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #202b46;
+            color: white;
+            padding: 25px 16px;
+            overflow-y: auto;
         }
 
-        .page-heading {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 26px 30px;
-            margin-bottom: 22px;
-            color: #fff;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 6px 18px rgba(102, 126, 234, .20);
-        }
-        .page-heading .heading-icon {
-            display: grid;
-            place-items: center;
-            width: 52px;
-            height: 52px;
-            flex: 0 0 52px;
-            border-radius: 14px;
-            background: rgba(255,255,255,.18);
-            font-size: 23px;
-        }
-        .page-heading h1 {
-            margin: 0 0 5px;
-            font-size: 25px;
-            font-weight: 750;
-        }
-        .page-heading p {
-            margin: 0;
-            color: rgba(255,255,255,.9);
-            font-size: 13px;
+        .brand {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 12px 30px;
         }
 
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 22px;
-            padding: 9px 14px;
-            color: #454b65;
-            background: #e9eaf3;
-            border-radius: 8px;
+        .menu-title {
+            font-size: 11px;
+            color: #929db5;
+            margin: 18px 12px 10px;
+            text-transform: uppercase;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #c4ccdc;
             text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
+            padding: 12px 13px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 14px;
         }
-        .back-link:hover { color: #343a50; background: #dedfee; }
 
-        .report-card {
-            overflow: hidden;
-            border: 0;
-            border-radius: 15px;
-            background: #fff;
-            box-shadow: 0 4px 16px rgba(40,45,80,.06);
+        .sidebar a i { width: 23px; }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #5368ed;
+            color: white;
         }
-        .report-card .card-header {
+
+        .main-content {
+            margin-left: 243px;
+            padding: 35px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .subtitle {
+            color: #8790a5;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .welcome-box {
+            background: linear-gradient(110deg, #5368ed, #8170ed);
+            color: white;
+            padding: 25px 28px;
+            border-radius: 13px;
+            margin-bottom: 25px;
+        }
+
+        .welcome-box h5 {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .welcome-box p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 15px rgba(30,45,80,.04);
+        }
+
+        .stat-card h3 {
+            font-size: 25px;
+            font-weight: bold;
+            margin: 8px 0 0;
+        }
+
+        .stat-card p {
+            color: #8992a5;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .stat-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 14px;
-            padding: 20px 24px;
-            background: #fff;
-            border-bottom: 1px solid #edf0f6;
+            justify-content: center;
+            background: #eef0ff;
+            color: #5368ed;
+            font-size: 18px;
         }
-        .report-card .card-header h5 {
-            margin: 0;
-            color: #343a60;
-            font-size: 17px;
-            font-weight: 700;
+
+        .content-card {
+            background: white;
+            border-radius: 13px;
+            padding: 25px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 15px rgba(30,45,80,.04);
         }
-        .report-card .card-body { padding: 24px; }
+
+        .content-card h5 {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .description {
+            color: #929bad;
+            font-size: 13px;
+            margin-bottom: 22px;
+        }
 
         .btn-purple {
-            color: #fff;
-            border: 0;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            font-weight: 600;
-        }
-        .btn-purple:hover { color: #fff; opacity: .92; }
-        .btn-export, .btn-print {
-            padding: 9px 14px;
-            border-radius: 8px;
+            background: #5368ed;
+            color: white;
+            border-radius: 7px;
+            padding: 9px 16px;
             font-size: 13px;
-            font-weight: 600;
         }
 
-        .table-responsive { width: 100%; }
-        #tabelLaporan {
-            width: 100% !important;
-            margin-top: 12px !important;
-            border-color: #edf0f6;
+        .btn-purple:hover {
+            background: #4055d5;
+            color: white;
         }
-        #tabelLaporan thead th {
-            padding: 14px 12px;
-            color: #fff;
-            background: #273451;
-            border-color: #273451;
+
+        .btn-print {
+            background: #202b46;
+            color: white;
+            border-radius: 7px;
+            padding: 9px 16px;
+            font-size: 13px;
+        }
+
+        .btn-print:hover {
+            color: white;
+            background: #344365;
+        }
+
+        table thead th {
+            background: #f6f7fc;
+            color: #626e85;
             font-size: 12px;
-            font-weight: 700;
+            border-top: none !important;
             white-space: nowrap;
         }
-        #tabelLaporan tbody td {
-            padding: 13px 12px;
-            color: #50556b;
-            font-size: 13px;
-            vertical-align: middle;
-        }
-        #tabelLaporan tbody tr:hover { background: #f7f5ff; }
-        .point-badge {
-            display: inline-block;
-            min-width: 38px;
-            padding: 5px 10px;
-            color: #7041a1;
-            background: #f0e8fa;
-            border-radius: 20px;
-            text-align: center;
-            font-weight: 700;
-        }
-        .dataTables_wrapper { font-size: 13px; }
-        .dt-search input, .dt-length select {
-            border: 1px solid #dfe2ed !important;
-            border-radius: 7px !important;
-            padding: 6px 9px !important;
-            outline: none;
-        }
-        .dt-search input:focus, .dt-length select:focus {
-            border-color: #8b70c5 !important;
-            box-shadow: 0 0 0 3px rgba(118,75,162,.10);
-        }
-        .page-link { color: #764ba2; }
-        .active > .page-link, .page-link.active {
-            color: #fff !important;
-            background: #764ba2 !important;
-            border-color: #764ba2 !important;
-        }
-        .dt-info { color: #74798d; }
 
-        @media (max-width: 768px) {
-            main.page-content { padding: 16px !important; }
-            .page-heading { padding: 20px; }
-            .page-heading h1 { font-size: 21px; }
-            .report-card .card-header,
-            .report-card .card-body { padding: 16px; }
-            .report-card .card-header { align-items: flex-start; }
-            .page-row { flex-wrap: wrap; }
-            main.page-content { flex-basis: 100%; }
+        table tbody td {
+            font-size: 13px;
+            vertical-align: middle !important;
+        }
+
+        .badge-status {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
+
+        .status-aktif {
+            background: #e2f8eb;
+            color: #219653;
+        }
+
+        .status-nonaktif {
+            background: #ffe8e8;
+            color: #dc3545;
+        }
+
+        .form-control {
+            font-size: 13px;
+            border-radius: 7px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 7px;
         }
 
         @media print {
-            body { background: #fff !important; font-size: 11px; }
-            .sidebar, nav, .no-print,
-            .dt-search, .dt-length, .dt-info, .dt-paging { display: none !important; }
-            .page-row, .container-fluid { display: block !important; width: 100% !important; margin: 0 !important; }
-            main.page-content { width: 100% !important; padding: 0 !important; }
-            .page-heading { padding: 0 0 14px !important; color: #000 !important; background: #fff !important; box-shadow: none !important; }
-            .page-heading .heading-icon, .page-heading p, .back-link { display: none !important; }
-            .page-heading h1 { color: #000 !important; font-size: 18px; }
-            .report-card { box-shadow: none !important; }
-            .report-card .card-header { padding: 0 0 10px !important; }
-            .report-card .card-body { padding: 0 !important; }
-            .table-responsive { overflow: visible !important; }
-            #tabelLaporan { width: 100% !important; font-size: 9px; border-collapse: collapse !important; }
-            #tabelLaporan th, #tabelLaporan td {
-                padding: 5px !important;
-                color: #000 !important;
-                background: #fff !important;
-                border: 1px solid #000 !important;
+            .sidebar, .filter-card, .no-print,
+            .dataTables_filter, .dataTables_length,
+            .dataTables_info, .dataTables_paginate {
+                display: none !important;
             }
-            #tabelLaporan thead th { color: #000 !important; }
-            .point-badge { padding: 0; color: #000; background: #fff; }
-            @page { size: landscape; margin: 1.5cm; }
+
+            .main-content {
+                margin: 0;
+                padding: 10px;
+            }
+
+            body { background: white; }
+
+            .content-card, .stat-card {
+                box-shadow: none;
+            }
+        }
+
+        @media(max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 
 <body>
-<div class="container-fluid">
-    <div class="row page-row">
-        <?php include 'layout/sidebar.php'; ?>
 
-        <main class="page-content">
-            <div class="page-heading">
-                <div class="heading-icon"><i class="fa-solid fa-file-lines"></i></div>
-                <div>
-                    <h1>Laporan Pelanggaran Siswa</h1>
-                    <p>Kelola dan lihat rekap data pelanggaran siswa.</p>
-                </div>
-            </div>
-
-            <a href="dashboard.php" class="back-link no-print">
-                <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
-            </a>
-
-            <div class="card report-card">
-                <div class="card-header">
-                    <h5><i class="fa-solid fa-table-list text-primary me-2"></i>Data Laporan Pelanggaran</h5>
-                    <div class="d-flex flex-wrap gap-2 no-print">
-                        <button type="button" onclick="cetakPDF()" class="btn btn-danger btn-print">
-                            <i class="fa-solid fa-file-pdf me-1"></i> Cetak PDF
-                        </button>
-                        <a href="laporan.php?export=excel" class="btn btn-success btn-export">
-                            <i class="fa-solid fa-file-excel me-1"></i> Export Excel
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table id="tabelLaporan" class="table table-striped table-bordered table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th>No.</th>
-                                    <th>NIS</th>
-                                    <th>Nama Siswa</th>
-                                    <th>Kode Pelanggaran</th>
-                                    <th>Jenis Pelanggaran</th>
-                                    <th>Poin</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                $no = 1;
-                                while ($row = mysqli_fetch_assoc($hasil)) {
-                                ?>
-                                    <tr>
-                                        <td><?= $no++; ?></td>
-                                        <td><?= htmlspecialchars((string)$row['nis'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?= htmlspecialchars((string)$row['nama_siswa'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?= htmlspecialchars((string)($row['kode'] ?? ''), ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?= htmlspecialchars((string)$row['nama_pelanggaran'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><span class="point-badge"><?= (int)$row['poin']; ?></span></td>
-                                    </tr>
-                                <?php } ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">
+        <i class="fas fa-graduation-cap mr-2"></i> SISWA APP
     </div>
+
+    <div class="menu-title">Menu Utama</div>
+    <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
+
+    <div class="menu-title">Master Data</div>
+    <a href="kelola_siswa.php"><i class="fas fa-user-graduate"></i> Kelola Siswa</a>
+    <a href="kelola_guru.php"><i class="fas fa-chalkboard-teacher"></i> Kelola Guru</a>
+    <a href="kelola_wali_kelas.php"><i class="fas fa-user-tie"></i> Wali Kelas</a>
+    <a href="kelola_kelas.php"><i class="fas fa-school"></i> Kelola Kelas</a>
+    <a href="kelola_tahun_ajaran.php"><i class="fas fa-calendar-alt"></i> Tahun Ajaran</a>
+    <a href="penempatan_siswa.php"><i class="fas fa-users"></i> Penempatan Siswa</a>
+
+    <div class="menu-title">Pelanggaran</div>
+    <a href="kelola_pelanggaran_kategori.php">
+        <i class="fas fa-list-alt"></i> Kategori Pelanggaran
+    </a>
+    <a href="kelola_jenis_pelanggaran.php">
+        <i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran
+    </a>
+    <a href="laporan.php" class="active">
+        <i class="fas fa-file-alt"></i> Laporan
+    </a>
+
+    <div class="menu-title">Lainnya</div>
+    <a href="about_me.php"><i class="fas fa-user"></i> About Me</a>
+    <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+</div>
+
+<!-- KONTEN -->
+<div class="main-content">
+
+    <h2 class="page-title">Laporan Pelanggaran</h2>
+    <p class="subtitle">Lihat dan cetak laporan data pelanggaran.</p>
+
+    <div class="welcome-box">
+        <h5><i class="fas fa-file-alt mr-2"></i> Laporan Data Pelanggaran</h5>
+        <p>Menampilkan rekap data jenis pelanggaran, poin, dan status pelanggaran.</p>
+    </div>
+
+    <!-- STATISTIK -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-list"></i></div>
+                <p class="mt-3">Total Pelanggaran</p>
+                <h3><?= $total; ?></h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <p class="mt-3">Pelanggaran Aktif</p>
+                <h3><?= $aktif; ?></h3>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-star"></i></div>
+                <p class="mt-3">Total Poin</p>
+                <h3><?= $totalPoin; ?></h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="content-card filter-card">
+        <h5>Filter Laporan</h5>
+        <p class="description">Pilih tanggal untuk menyaring laporan.</p>
+
+        <form method="GET" class="row align-items-end">
+            <div class="col-md-4 mb-3">
+                <label class="filter-label">Tanggal Mulai</label>
+                <input type="date" name="tanggal_mulai"
+                       class="form-control"
+                       value="<?= htmlspecialchars($tanggal_mulai); ?>">
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="filter-label">Tanggal Selesai</label>
+                <input type="date" name="tanggal_selesai"
+                       class="form-control"
+                       value="<?= htmlspecialchars($tanggal_selesai); ?>">
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <button type="submit" class="btn btn-purple">
+                    <i class="fas fa-search mr-1"></i> Tampilkan
+                </button>
+
+                <a href="laporan.php" class="btn btn-light">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- TABEL -->
+    <div class="content-card">
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+            <div>
+                <h5>Daftar Laporan Pelanggaran</h5>
+                <p class="description mb-0">Data berdasarkan periode tanggal yang dipilih.</p>
+            </div>
+
+            <button onclick="window.print()" class="btn btn-print no-print mt-2">
+                <i class="fas fa-print mr-1"></i> Cetak Laporan
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table id="tabelLaporan" class="table table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Kode</th>
+                        <th>Nama Pelanggaran</th>
+                        <th>Poin</th>
+                        <th>Deskripsi</th>
+                        <th>Status</th>
+                        <th>Tanggal Dibuat</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <?php $no = 1; while ($data = mysqli_fetch_assoc($query)) : ?>
+                    <tr>
+                        <td><?= $no++; ?></td>
+                        <td><?= htmlspecialchars($data['kode'] ?? '-'); ?></td>
+                        <td><?= htmlspecialchars($data['nama'] ?? '-'); ?></td>
+                        <td><?= htmlspecialchars($data['poin'] ?? '0'); ?></td>
+                        <td><?= htmlspecialchars($data['deskripsi'] ?? '-'); ?></td>
+                        <td>
+                            <?php if ($data['status_aktif'] == 1) : ?>
+                                <span class="badge-status status-aktif">Aktif</span>
+                            <?php else : ?>
+                                <span class="badge-status status-nonaktif">Nonaktif</span>
+                            <?php endif; ?>
+                        </td>
+                        <td><?= htmlspecialchars($data['created_at'] ?? '-'); ?></td>
+                    </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
-<script>
-let panjangHalamanSebelumCetak = 10;
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
 
+<script>
 $(document).ready(function () {
     $('#tabelLaporan').DataTable({
         language: {
@@ -352,41 +476,17 @@ $(document).ready(function () {
             lengthMenu: "Tampilkan _MENU_ data",
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
             infoEmpty: "Tidak ada data",
-            infoFiltered: "(difilter dari _MAX_ total data)",
             zeroRecords: "Data tidak ditemukan",
-            emptyTable: "Belum ada laporan pelanggaran",
             paginate: {
-                first: "Pertama",
-                last: "Terakhir",
+                first: "Awal",
+                last: "Akhir",
                 next: "Berikutnya",
                 previous: "Sebelumnya"
             }
-        },
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50, 100],
-        order: [[2, 'asc']],
-        columnDefs: [{
-            targets: 0,
-            orderable: false,
-            searchable: false
-        }]
+        }
     });
 });
-
-function cetakPDF() {
-    const tabel = $('#tabelLaporan').DataTable();
-    panjangHalamanSebelumCetak = tabel.page.len();
-    tabel.page.len(-1).draw();
-
-    setTimeout(function () {
-        window.print();
-    }, 300);
-}
-
-window.addEventListener('afterprint', function () {
-    const tabel = $('#tabelLaporan').DataTable();
-    tabel.page.len(panjangHalamanSebelumCetak).draw();
-});
 </script>
+
 </body>
 </html>

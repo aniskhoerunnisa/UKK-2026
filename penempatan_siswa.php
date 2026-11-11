@@ -1,53 +1,50 @@
+
 <?php
-// penempatan_siswa.php
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-// Daftar siswa aktif
-$siswa = mysqli_query($koneksi, "
-    SELECT id, nis, nama
-    FROM t_siswa
-    WHERE status_aktif = 1
-    ORDER BY nama ASC
-");
+// AMBIL DATA PENEMPATAN SISWA
+$sql = "SELECT
+            ks.*,
+            s.nis,
+            s.nama AS nama_siswa,
+            k.nama AS nama_kelas,
+            ta.nama AS tahun_ajaran
+        FROM t_kelas_siswa ks
+        LEFT JOIN t_siswa s ON ks.siswa_id = s.id
+        LEFT JOIN t_kelas k ON ks.kelas_id = k.id
+        LEFT JOIN t_tahun_ajaran ta ON ks.tahun_ajaran_id = ta.id
+        ORDER BY s.nama ASC";
 
-// Daftar tahun ajaran aktif
-$tahun = mysqli_query($koneksi, "
-    SELECT id, nama
-    FROM t_tahun_ajaran
-    WHERE status_aktif = 1
-    ORDER BY id DESC
-");
+$query = mysqli_query($koneksi, $sql);
 
-// Daftar kelas aktif
-$kelas = mysqli_query($koneksi, "
-    SELECT id, nama, tingkat, jurusan
-    FROM t_kelas
-    WHERE status_aktif = 1
-    ORDER BY nama ASC
-");
+if (!$query) {
+    die("Gagal mengambil data penempatan siswa: " . mysqli_error($koneksi));
+}
 
-// Data penempatan siswa
-$sql = "
-    SELECT
-        ks.id,
-        s.nis,
-        s.nama AS nama_siswa,
-        ta.nama AS tahun_ajaran,
-        k.nama AS nama_kelas,
-        k.tingkat,
-        k.jurusan,
-        ks.tanggal_mulai,
-        ks.tanggal_selesai,
-        ks.status_aktif
-    FROM t_kelas_siswa ks
-    LEFT JOIN t_siswa s ON ks.siswa_id = s.id
-    LEFT JOIN t_tahun_ajaran ta ON ks.tahun_ajaran_id = ta.id
-    LEFT JOIN t_kelas k ON ks.kelas_id = k.id
-    ORDER BY ks.id DESC
-";
+// STATISTIK
+$qTotal = mysqli_query(
+    $koneksi,
+    "SELECT COUNT(*) AS total FROM t_kelas_siswa"
+);
 
-$hasil = mysqli_query($koneksi, $sql);
+$qSiswa = mysqli_query(
+    $koneksi,
+    "SELECT COUNT(DISTINCT siswa_id) AS total FROM t_kelas_siswa"
+);
+
+$qKelas = mysqli_query(
+    $koneksi,
+    "SELECT COUNT(DISTINCT kelas_id) AS total FROM t_kelas_siswa"
+);
+
+if (!$qTotal || !$qSiswa || !$qKelas) {
+    die("Gagal menghitung statistik: " . mysqli_error($koneksi));
+}
+
+$total = mysqli_fetch_assoc($qTotal)['total'];
+$totalSiswa = mysqli_fetch_assoc($qSiswa)['total'];
+$totalKelas = mysqli_fetch_assoc($qKelas)['total'];
 ?>
 
 <!DOCTYPE html>
@@ -57,204 +54,219 @@ $hasil = mysqli_query($koneksi, $sql);
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Penempatan Siswa</title>
 
-    <!-- Bootstrap 4.6.2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-    <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
 
     <style>
-        body {
-            background: #f4f5fb;
-            font-family: 'Segoe UI', sans-serif;
-            color: #343a50;
-        }
-
-        /* Layout utama: sidebar dan konten sejajar */
-        .container-fluid > .row {
-            display: flex;
-            flex-wrap: nowrap;
-            align-items: flex-start;
-        }
-
-        main {
-            flex: 1 1 0;
-            min-width: 0;
-            margin-left: 0;
-            padding: 30px !important;
-            width: auto;
+        * {
             box-sizing: border-box;
         }
 
-        .header-page {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+        body {
+            margin: 0;
+            background: #f3f5ff;
+            font-family: Arial, sans-serif;
+            color: #253451;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 243px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #202b46;
+            padding: 25px 16px;
+            overflow-y: auto;
+        }
+
+        .brand {
             color: white;
-            padding: 27px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 12px 30px;
+        }
+
+        .menu-title {
+            color: #929db5;
+            font-size: 11px;
+            margin: 18px 12px 10px;
+            text-transform: uppercase;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #c4ccdc;
+            text-decoration: none;
+            padding: 12px 13px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .sidebar a i {
+            width: 23px;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #5368ed;
+            color: white;
+        }
+
+        /* KONTEN */
+        .main-content {
+            margin-left: 243px;
+            padding: 30px;
+        }
+
+        .page-title {
+            font-size: 27px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        .subtitle {
+            color: #8790a5;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        /* BANNER */
+        .welcome-box {
+            background: linear-gradient(110deg, #5368ed, #8860e8);
+            color: white;
+            padding: 25px 28px;
             border-radius: 15px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, .2);
+            margin-bottom: 22px;
         }
 
-        .header-page h2 {
-            font-weight: 700;
-            margin-bottom: 6px;
+        .welcome-box h5 {
+            font-weight: bold;
+            margin-bottom: 8px;
         }
 
-        .header-page p {
-            margin-bottom: 0;
-            opacity: .9;
+        .welcome-box p {
+            font-size: 13px;
+            margin: 0;
+            line-height: 1.7;
         }
 
-        .card {
-            border: none;
+        /* STATISTIK */
+        .stat-card {
+            background: white;
             border-radius: 14px;
-            box-shadow: 0 4px 15px rgba(40, 45, 80, .06);
-            margin-bottom: 25px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 145px;
+            box-shadow: 0 5px 20px rgba(30,45,80,.035);
         }
 
-        .card-header {
-            background: #fff;
-            border-bottom: 1px solid #eee;
-            padding: 20px 24px;
-            border-radius: 14px 14px 0 0 !important;
+        .stat-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-bottom: 13px;
+            font-size: 18px;
         }
 
-        .card-header h5 {
-            font-weight: 700;
-            color: #343a60;
+        .purple {
+            background: linear-gradient(135deg,#7164fa,#9873f5);
+        }
+
+        .blue {
+            background: linear-gradient(135deg,#3294f5,#69b8f5);
+        }
+
+        .orange {
+            background: linear-gradient(135deg,#ff994b,#ffbf68);
+        }
+
+        .stat-card h3 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 5px;
+        }
+
+        .stat-card p {
+            color: #7d8ca9;
+            font-size: 13px;
             margin: 0;
         }
 
-        .card-body {
-            padding: 25px;
+        /* TABEL */
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 24px;
+            box-shadow: 0 5px 20px rgba(30,45,80,.035);
         }
 
-        .form-control {
-            border: 1px solid #e0e2ee;
-            border-radius: 8px;
-            height: 43px;
-            font-size: 14px;
+        .content-card h5 {
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 6px;
         }
 
-        .form-control:focus {
-            border-color: #764ba2;
-            box-shadow: 0 0 0 3px rgba(118, 75, 162, .1);
-        }
-
-        label {
-            font-weight: 600;
-            font-size: 14px;
-            color: #454b65;
+        .description {
+            color: #929bad;
+            font-size: 13px;
+            margin-bottom: 20px;
         }
 
         .btn-purple {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #5368ed;
             color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-weight: 600;
+            border-radius: 7px;
+            padding: 9px 15px;
+            font-size: 13px;
         }
 
         .btn-purple:hover {
+            background: #4055d5;
             color: white;
-            opacity: .9;
-        }
-
-        .btn-back {
-            background: #e9eaf3;
-            color: #454b65;
-            border-radius: 8px;
-            padding: 9px 16px;
-            font-weight: 600;
-        }
-
-        .btn-back:hover {
-            background: #dcddec;
-            color: #343a50;
         }
 
         .table thead th {
-            background: #202b46;
-            color: white;
-            border: none;
-            font-size: 13px;
+            background: #f6f7fc;
+            color: #626e85;
+            font-size: 12px;
+            border-top: none;
             white-space: nowrap;
-            padding: 14px;
         }
 
         .table tbody td {
             font-size: 13px;
             vertical-align: middle;
-            padding: 13px;
-            color: #50556b;
         }
 
-        .table tbody tr:hover {
-            background: #f5f3ff;
-        }
-
-        .badge-aktif {
-            background: #d8f5e5;
-            color: #16834c;
-            padding: 7px 12px;
-            border-radius: 20px;
-        }
-
-        .badge-nonaktif {
-            background: #ececf1;
-            color: #686b78;
-            padding: 7px 12px;
-            border-radius: 20px;
-        }
-
-        .alert {
-            border: none;
-            border-radius: 10px;
-        }
-
-        .dataTables_wrapper {
-            font-size: 13px;
-        }
-
-        .dataTables_wrapper .dataTables_filter input,
-        .dataTables_wrapper .dataTables_length select {
-            border: 1px solid #ddd;
+        .btn-action {
+            width: 30px;
+            height: 30px;
             border-radius: 6px;
-            padding: 5px 9px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin: 1px;
         }
 
-        .page-item.active .page-link {
-            background: #764ba2;
-            border-color: #764ba2;
-        }
-
-        .page-link {
-            color: #764ba2;
-        }
-
-        @media (max-width: 768px) {
-            .container-fluid > .row {
-                flex-wrap: wrap;
-            }
-
-            main {
-                flex: 0 0 100%;
-                min-width: 0;
-                margin-left: 0;
+        @media(max-width: 768px) {
+            .sidebar {
+                position: relative;
                 width: 100%;
-                padding: 15px !important;
+                height: auto;
             }
 
-            .card-body {
-                padding: 15px;
-            }
-
-            .header-page {
-                padding: 20px;
+            .main-content {
+                margin-left: 0;
+                padding: 18px;
             }
         }
     </style>
@@ -262,216 +274,232 @@ $hasil = mysqli_query($koneksi, $sql);
 
 <body>
 
-<div class="container-fluid">
-    <div class="row flex-nowrap">
+<!-- SIDEBAR -->
+<div class="sidebar">
 
-        <?php include 'layout/sidebar.php'; ?>
-
-        <main>
-
-            <!-- HEADER -->
-            <div class="header-page">
-                <h2><i class="fas fa-user-graduate mr-2"></i>Penempatan Siswa</h2>
-                <p>Kelola penempatan siswa berdasarkan tahun ajaran dan kelas.</p>
-            </div>
-
-            <a href="dashboard.php" class="btn btn-back btn-sm mb-4">
-                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Dashboard
-            </a>
-
-            <!-- PESAN SUKSES -->
-            <?php if (isset($_SESSION['pesan_sukses'])) { ?>
-                <div class="alert alert-success alert-dismissible fade show">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    <?= htmlspecialchars($_SESSION['pesan_sukses']); ?>
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <?php unset($_SESSION['pesan_sukses']); ?>
-            <?php } ?>
-
-            <!-- PESAN ERROR -->
-            <?php if (isset($_SESSION['pesan_error'])) { ?>
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    <?= htmlspecialchars($_SESSION['pesan_error']); ?>
-                    <button type="button" class="close" data-dismiss="alert">
-                        <span>&times;</span>
-                    </button>
-                </div>
-                <?php unset($_SESSION['pesan_error']); ?>
-            <?php } ?>
-
-            <!-- FORM PENEMPATAN -->
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-plus-circle mr-2 text-primary"></i>Form Penempatan Siswa</h5>
-                </div>
-
-                <div class="card-body">
-                    <form action="proses_simpan_penempatan.php" method="POST">
-
-                        <div class="form-group">
-                            <label for="siswa_id">Siswa</label>
-                            <select name="siswa_id" id="siswa_id" class="form-control" required>
-                                <option value="">-- Pilih Siswa --</option>
-                                <?php while ($s = mysqli_fetch_assoc($siswa)) { ?>
-                                    <option value="<?= htmlspecialchars($s['id']); ?>">
-                                        <?= htmlspecialchars($s['nis'] . ' - ' . $s['nama']); ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="tahun_ajaran_id">Tahun Ajaran</label>
-                            <select name="tahun_ajaran_id" id="tahun_ajaran_id" class="form-control" required>
-                                <option value="">-- Pilih Tahun Ajaran --</option>
-                                <?php while ($ta = mysqli_fetch_assoc($tahun)) { ?>
-                                    <option value="<?= htmlspecialchars($ta['id']); ?>">
-                                        <?= htmlspecialchars($ta['nama']); ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="kelas_id">Kelas</label>
-                            <select name="kelas_id" id="kelas_id" class="form-control" required>
-                                <option value="">-- Pilih Kelas --</option>
-                                <?php while ($k = mysqli_fetch_assoc($kelas)) { ?>
-                                    <option value="<?= htmlspecialchars($k['id']); ?>">
-                                        <?= htmlspecialchars(
-                                            $k['nama'] . ' - Tingkat ' .
-                                            $k['tingkat'] . ' - ' . $k['jurusan']
-                                        ); ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="tanggal_mulai">Tanggal Mulai</label>
-                                    <input type="date" name="tanggal_mulai"
-                                           id="tanggal_mulai" class="form-control" required>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="tanggal_selesai">Tanggal Selesai</label>
-                                    <input type="date" name="tanggal_selesai"
-                                           id="tanggal_selesai" class="form-control" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="status_aktif">Status</label>
-                            <select name="status_aktif" id="status_aktif" class="form-control" required>
-                                <option value="1">Aktif</option>
-                                <option value="0">Tidak Aktif</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-purple">
-                            <i class="fas fa-save mr-1"></i> Simpan Penempatan
-                        </button>
-
-                    </form>
-                </div>
-            </div>
-
-            <!-- TABEL DATA -->
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-table mr-2 text-primary"></i>Data Penempatan Siswa</h5>
-                </div>
-
-                <div class="card-body">
-                    <div class="table-responsive">
-
-                        <table id="tabelPenempatan" class="table table-bordered table-striped table-hover">
-                            <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>NIS</th>
-                                    <th>Nama Siswa</th>
-                                    <th>Tahun Ajaran</th>
-                                    <th>Kelas</th>
-                                    <th>Tingkat</th>
-                                    <th>Jurusan</th>
-                                    <th>Tanggal Mulai</th>
-                                    <th>Tanggal Selesai</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                <?php
-                                $no = 1;
-                                while ($row = mysqli_fetch_assoc($hasil)) {
-                                ?>
-                                    <tr>
-                                        <td><?= $no++; ?></td>
-                                        <td><?= htmlspecialchars($row['nis'] ?? '-'); ?></td>
-                                        <td><?= htmlspecialchars($row['nama_siswa'] ?? '-'); ?></td>
-                                        <td><?= htmlspecialchars($row['tahun_ajaran'] ?? '-'); ?></td>
-                                        <td><?= htmlspecialchars($row['nama_kelas'] ?? '-'); ?></td>
-                                        <td><?= htmlspecialchars($row['tingkat'] ?? '-'); ?></td>
-                                        <td><?= htmlspecialchars($row['jurusan'] ?? '-'); ?></td>
-                                        <td><?= htmlspecialchars($row['tanggal_mulai'] ?? '-'); ?></td>
-                                        <td><?= htmlspecialchars($row['tanggal_selesai'] ?? '-'); ?></td>
-                                        <td>
-                                            <?php if ($row['status_aktif'] == 1) { ?>
-                                                <span class="badge-aktif">Aktif</span>
-                                            <?php } else { ?>
-                                                <span class="badge-nonaktif">Tidak Aktif</span>
-                                            <?php } ?>
-                                        </td>
-                                    </tr>
-                                <?php } ?>
-                            </tbody>
-                        </table>
-
-                    </div>
-                </div>
-            </div>
-
-        </main>
+    <div class="brand">
+        <i class="fas fa-graduation-cap mr-2"></i> MyWebsite.
     </div>
+
+    <div class="menu-title">Menu Utama</div>
+
+    <a href="dashboard.php">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
+
+    <div class="menu-title">Master Data</div>
+
+    <a href="kelola_siswa.php">
+        <i class="fas fa-user-graduate"></i> Kelola Siswa
+    </a>
+
+    <a href="kelola_guru.php">
+        <i class="fas fa-chalkboard-teacher"></i> Kelola Guru
+    </a>
+
+    <a href="kelola_wali_kelas.php">
+        <i class="fas fa-user-tie"></i> Wali Kelas
+    </a>
+
+    <a href="kelola_kelas.php">
+        <i class="fas fa-school"></i> Kelola Kelas
+    </a>
+
+    <a href="kelola_tahun_ajaran.php">
+        <i class="fas fa-calendar-alt"></i> Tahun Ajaran
+    </a>
+
+    <a href="penempatan_siswa.php" class="active">
+        <i class="fas fa-users"></i> Penempatan Siswa
+    </a>
+
+    <div class="menu-title">Pelanggaran</div>
+
+    <a href="kelola_pelanggaran_kategori.php">
+        <i class="fas fa-list-alt"></i> Kategori Pelanggaran
+    </a>
+
+    <a href="kelola_jenis_pelanggaran.php">
+        <i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran
+    </a>
+
+    <a href="laporan.php">
+        <i class="fas fa-file-alt"></i> Laporan
+    </a>
+
+    <div class="menu-title">Lainnya</div>
+
+    <a href="about_me.php">
+        <i class="fas fa-user"></i> About Me
+    </a>
+
+    <a href="logout.php">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+
 </div>
 
-<!-- JAVASCRIPT -->
+<!-- KONTEN UTAMA -->
+<div class="main-content">
+
+    <h2 class="page-title">Penempatan Siswa</h2>
+    <p class="subtitle">Kelola dan pantau penempatan siswa berdasarkan kelas dan tahun ajaran.</p>
+
+    <!-- BANNER -->
+    <div class="welcome-box">
+        <h5>
+            <i class="fas fa-users mr-2"></i>
+            Data Penempatan Siswa
+        </h5>
+
+        <p>
+            Halaman ini digunakan untuk mengelola penempatan siswa
+            ke dalam kelas berdasarkan tahun ajaran yang berlaku.
+        </p>
+    </div>
+
+    <!-- STATISTIK -->
+    <div class="row">
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3><?= $total; ?></h3>
+                <p>Total Penempatan</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                <h3><?= $totalSiswa; ?></h3>
+                <p>Total Siswa Ditempatkan</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon orange">
+                    <i class="fas fa-school"></i>
+                </div>
+                <h3><?= $totalKelas; ?></h3>
+                <p>Total Kelas Terisi</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABEL PENEMPATAN SISWA -->
+    <div class="content-card">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+
+            <div>
+                <h5>Daftar Penempatan Siswa</h5>
+                <p class="description mb-0">
+                    Berikut merupakan daftar penempatan siswa berdasarkan kelas.
+                </p>
+            </div>
+
+            <a href="tambah_penempatan_siswa.php" class="btn btn-purple mt-2">
+                <i class="fas fa-plus mr-1"></i> Tambah Penempatan
+            </a>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table id="tabelPenempatan" class="table table-bordered table-hover">
+
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>NIS</th>
+                        <th>Nama Siswa</th>
+                        <th>Kelas</th>
+                        <th>Tahun Ajaran</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    <?php
+                    $no = 1;
+                    while ($data = mysqli_fetch_assoc($query)) :
+                    ?>
+
+                    <tr>
+                        <td><?= $no++; ?></td>
+
+                        <td>
+                            <?= htmlspecialchars($data['nis'] ?? '-'); ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($data['nama_siswa'] ?? '-'); ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($data['nama_kelas'] ?? '-'); ?>
+                        </td>
+
+                        <td>
+                            <?= htmlspecialchars($data['tahun_ajaran'] ?? '-'); ?>
+                        </td>
+
+                        <td>
+                            <a href="edit_penempatan_siswa.php?id=<?= (int)$data['id']; ?>"
+                               class="btn btn-warning btn-action"
+                               title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            <a href="hapus_penempatan_siswa.php?id=<?= (int)$data['id']; ?>"
+                               class="btn btn-danger btn-action"
+                               title="Hapus"
+                               onclick="return confirm('Yakin ingin menghapus penempatan siswa ini?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+
+                    <?php endwhile; ?>
+
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
 
 <script>
-$(document).ready(function () {
+$(document).ready(function() {
     $('#tabelPenempatan').DataTable({
         language: {
             search: "Cari:",
             lengthMenu: "Tampilkan _MENU_ data",
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-            infoEmpty: "Tidak ada data penempatan siswa",
-            infoFiltered: "(difilter dari _MAX_ total data)",
-            zeroRecords: "Data penempatan siswa tidak ditemukan",
-            emptyTable: "Belum ada data penempatan siswa",
+            infoEmpty: "Tidak ada data",
+            zeroRecords: "Data tidak ditemukan",
             paginate: {
-                first: "Pertama",
-                last: "Terakhir",
+                first: "Awal",
+                last: "Akhir",
                 next: "Berikutnya",
                 previous: "Sebelumnya"
             }
-        },
-        pageLength: 10,
-        lengthMenu: [5, 10, 25, 50, 100],
-        order: [[0, 'asc']]
+        }
     });
 });
 </script>

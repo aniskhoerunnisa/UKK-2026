@@ -3,431 +3,479 @@
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
+// AMBIL DATA GURU
 $sql = "SELECT * FROM t_guru ORDER BY nama ASC";
-$hasil = mysqli_query($koneksi, $sql);
+$query = mysqli_query($koneksi, $sql);
+
+if (!$query) {
+    die("Gagal mengambil data guru: " . mysqli_error($koneksi));
+}
+
+// STATISTIK
+$qTotal = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM t_guru");
+$qAktif = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM t_guru WHERE status_aktif = 1");
+$qNonaktif = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM t_guru WHERE status_aktif = 0");
+
+$total = mysqli_fetch_assoc($qTotal)['total'];
+$aktif = mysqli_fetch_assoc($qAktif)['total'];
+$nonaktif = mysqli_fetch_assoc($qNonaktif)['total'];
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kelola Guru - Sistem Pelanggaran Siswa</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kelola Guru</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
 
-<style>
-* {
-    box-sizing: border-box;
-}
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f6ff;
-    color: #202d49;
-}
+        body {
+            margin: 0;
+            background: #f3f5ff;
+            font-family: Arial, sans-serif;
+            color: #253451;
+        }
 
-.sidebar {
-    width: 304px;
-    min-height: 100vh;
-    background: #202d49;
-    padding: 22px 15px;
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    overflow-y: auto;
-}
+        /* SIDEBAR */
+        .sidebar {
+            width: 243px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: #202b46;
+            padding: 25px 16px;
+            overflow-y: auto;
+        }
 
-.logo {
-    color: white;
-    font-size: 25px;
-    font-weight: bold;
-    margin-bottom: 38px;
-}
+        .brand {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 5px 12px 30px;
+        }
 
-.menu-label {
-    color: #8390aa;
-    font-size: 12px;
-    margin-bottom: 18px;
-}
+        .menu-title {
+            color: #929db5;
+            font-size: 11px;
+            margin: 18px 12px 10px;
+            text-transform: uppercase;
+        }
 
-.menu a {
-    display: block;
-    color: #e3e9f7;
-    text-decoration: none;
-    padding: 15px;
-    margin-bottom: 7px;
-    border-radius: 12px;
-    font-size: 14px;
-    transition: .2s;
-}
+        .sidebar a {
+            display: block;
+            color: #c4ccdc;
+            text-decoration: none;
+            padding: 12px 13px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
 
-.menu a i {
-    width: 25px;
-}
+        .sidebar a i {
+            width: 23px;
+        }
 
-.menu a:hover,
-.menu a.active {
-    background: #5368ed;
-    color: white;
-}
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #5368ed;
+            color: white;
+        }
 
-.menu-divider {
-    border-top: 1px solid #3b4760;
-    margin-top: 20px;
-    padding-top: 15px;
-}
+        /* KONTEN */
+        .main-content {
+            margin-left: 243px;
+            padding: 30px;
+        }
 
-.menu a.logout {
-    color: #ff5368;
-}
+        .page-title {
+            font-size: 27px;
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
 
-.main {
-    margin-left: 304px;
-    padding: 28px 30px 40px;
-}
+        .subtitle {
+            color: #8790a5;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
 
-.page-title {
-    font-size: 32px;
-    font-weight: bold;
-}
+        /* BANNER */
+        .welcome-box {
+            background: linear-gradient(110deg, #5368ed, #8860e8);
+            color: white;
+            padding: 25px 28px;
+            border-radius: 15px;
+            margin-bottom: 22px;
+        }
 
-.page-title span {
-    color: #7764ef;
-}
+        .welcome-box h5 {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
 
-.subtitle {
-    color: #7e8ca9;
-    margin-bottom: 25px;
-}
+        .welcome-box p {
+            font-size: 13px;
+            margin: 0;
+            line-height: 1.7;
+        }
 
-.top-banner {
-    background: linear-gradient(115deg, #5268ed, #8260e9);
-    color: white;
-    padding: 28px 32px;
-    border-radius: 20px;
-    margin-bottom: 25px;
-    box-shadow: 0 10px 25px rgba(83,103,237,.12);
-}
+        /* STATISTIK */
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 145px;
+            box-shadow: 0 5px 20px rgba(30,45,80,.035);
+        }
 
-.top-banner .label {
-    display: inline-block;
-    background: rgba(255,255,255,.2);
-    padding: 8px 14px;
-    border-radius: 25px;
-    font-size: 11px;
-    margin-bottom: 12px;
-}
+        .stat-icon {
+            width: 43px;
+            height: 43px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            margin-bottom: 13px;
+            font-size: 18px;
+        }
 
-.top-banner h3 {
-    font-size: 25px;
-    font-weight: bold;
-}
+        .purple {
+            background: linear-gradient(135deg,#7164fa,#9873f5);
+        }
 
-.top-banner p {
-    margin-bottom: 0;
-    line-height: 1.8;
-}
+        .blue {
+            background: linear-gradient(135deg,#3294f5,#69b8f5);
+        }
 
-.btn-add {
-    background: linear-gradient(110deg, #5268ed, #8260e9);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 18px;
-    font-weight: bold;
-}
+        .orange {
+            background: linear-gradient(135deg,#ff994b,#ffbf68);
+        }
 
-.btn-add:hover {
-    color: white;
-    opacity: .9;
-}
+        .stat-card h3 {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 0 5px;
+        }
 
-.table-card {
-    background: white;
-    padding: 24px;
-    border-radius: 18px;
-    box-shadow: 0 8px 25px rgba(30,45,80,.05);
-}
+        .stat-card p {
+            color: #7d8ca9;
+            font-size: 13px;
+            margin: 0;
+        }
 
-.table-heading {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 6px;
-}
+        /* TABEL */
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 24px;
+            box-shadow: 0 5px 20px rgba(30,45,80,.035);
+        }
 
-.table-description {
-    color: #7e8ca9;
-    margin-bottom: 22px;
-}
+        .content-card h5 {
+            font-size: 17px;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
 
-#tabelGuru {
-    width: 100% !important;
-}
+        .description {
+            color: #929bad;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
 
-#tabelGuru th,
-#tabelGuru td {
-    vertical-align: middle;
-}
+        .btn-purple {
+            background: #5368ed;
+            color: white;
+            border-radius: 7px;
+            padding: 9px 15px;
+            font-size: 13px;
+        }
 
-#tabelGuru thead th {
-    background: #202d49;
-    color: white;
-    border-color: #35425f;
-    white-space: nowrap;
-}
+        .btn-purple:hover {
+            background: #4055d5;
+            color: white;
+        }
 
-#tabelGuru td {
-    color: #46536d;
-}
+        .table thead th {
+            background: #f6f7fc;
+            color: #626e85;
+            font-size: 12px;
+            border-top: none;
+            white-space: nowrap;
+        }
 
-.table-striped tbody tr:nth-of-type(odd) {
-    background: #f7f8ff;
-}
+        .table tbody td {
+            font-size: 13px;
+            vertical-align: middle;
+        }
 
-.aksi {
-    white-space: nowrap;
-}
+        .badge-status {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+        }
 
-.badge-status {
-    padding: 7px 11px;
-    border-radius: 20px;
-}
+        .status-aktif {
+            background: #e2f8eb;
+            color: #219653;
+        }
 
-.btn-sm {
-    border-radius: 7px;
-    margin: 2px;
-}
+        .status-nonaktif {
+            background: #ffe8e8;
+            color: #dc3545;
+        }
 
-.dataTables_wrapper {
-    color: #526078;
-    font-size: 13px;
-}
+        .btn-action {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            margin: 1px;
+        }
 
-.dataTables_wrapper .form-control,
-.dataTables_wrapper select {
-    border: 1px solid #dfe4f1;
-    border-radius: 8px;
-}
+        @media(max-width: 768px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+            }
 
-.dataTables_wrapper .page-item.active .page-link {
-    background: #5368ed;
-    border-color: #5368ed;
-}
-
-.dataTables_wrapper .page-link {
-    color: #5368ed;
-}
-
-.footer {
-    color: #8b97ad;
-    font-size: 13px;
-    margin-top: 25px;
-}
-
-@media (max-width: 767px) {
-    .sidebar {
-        position: relative;
-        width: 100%;
-        min-height: auto;
-    }
-
-    .logo {
-        margin-bottom: 25px;
-    }
-
-    .main {
-        margin-left: 0;
-        padding: 22px 15px;
-    }
-
-    .page-title {
-        font-size: 27px;
-    }
-
-    .top-banner {
-        padding: 23px;
-    }
-
-    .table-card {
-        padding: 15px;
-    }
-}
-</style>
+            .main-content {
+                margin-left: 0;
+                padding: 18px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
 <!-- SIDEBAR -->
-<aside class="sidebar">
-    <div class="logo">
-        <i class="fas fa-layer-group"></i> MyWebsite.
+<div class="sidebar">
+
+    <div class="brand">
+        <i class="fas fa-graduation-cap mr-2"></i> MyWebsite.
     </div>
 
-    <div class="menu-label">MENU UTAMA</div>
+    <div class="menu-title">Menu Utama</div>
 
-    <nav class="menu">
-        <a href="dashboard.php">
-            <i class="fas fa-th-large"></i> Dashboard
-        </a>
+    <a href="dashboard.php">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
 
-        <a href="kelola_siswa.php">
-            <i class="fas fa-user-graduate"></i> Kelola Siswa
-        </a>
+    <div class="menu-title">Master Data</div>
 
-        <a href="kelola_guru.php" class="active">
-            <i class="fas fa-chalkboard-teacher"></i> Kelola Guru
-        </a>
+    <a href="kelola_siswa.php">
+        <i class="fas fa-user-graduate"></i> Kelola Siswa
+    </a>
 
-        <a href="wali_kelas.php">
-            <i class="fas fa-user-tie"></i> Wali Kelas
-        </a>
+    <a href="kelola_guru.php" class="active">
+        <i class="fas fa-chalkboard-teacher"></i> Kelola Guru
+    </a>
 
-        <a href="kelola_kelas.php">
-            <i class="fas fa-school"></i> Kelola Kelas
-        </a>
+    <a href="kelola_wali_kelas.php">
+        <i class="fas fa-user-tie"></i> Wali Kelas
+    </a>
 
-        <a href="kelola_tahun_ajaran.php">
-            <i class="fas fa-calendar-alt"></i> Tahun Ajaran
-        </a>
+    <a href="kelola_kelas.php">
+        <i class="fas fa-school"></i> Kelola Kelas
+    </a>
 
-        <a href="about_me.php">
-            <i class="fas fa-user-circle"></i> About Me
-        </a>
+    <a href="kelola_tahun_ajaran.php">
+        <i class="fas fa-calendar-alt"></i> Tahun Ajaran
+    </a>
 
-        <div class="menu-divider">
-            <a href="logout.php" class="logout">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
-        </div>
-    </nav>
-</aside>
+    <a href="penempatan_siswa.php">
+        <i class="fas fa-users"></i> Penempatan Siswa
+    </a>
+
+    <div class="menu-title">Pelanggaran</div>
+
+    <a href="kelola_pelanggaran_kategori.php">
+        <i class="fas fa-list-alt"></i> Kategori Pelanggaran
+    </a>
+
+    <a href="kelola_jenis_pelanggaran.php">
+        <i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran
+    </a>
+
+    <a href="laporan.php">
+        <i class="fas fa-file-alt"></i> Laporan
+    </a>
+
+    <div class="menu-title">Lainnya</div>
+
+    <a href="about_me.php">
+        <i class="fas fa-user"></i> About Me
+    </a>
+
+    <a href="logout.php">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+
+</div>
 
 <!-- KONTEN UTAMA -->
-<main class="main">
+<div class="main-content">
 
-    <h1 class="page-title">
-        Kelola Guru <span>.</span>
-    </h1>
-
-    <p class="subtitle">
-        Kelola dan pantau data guru yang terdaftar di sekolah ✨
-    </p>
+    <h2 class="page-title">Kelola Guru</h2>
+    <p class="subtitle">Kelola dan pantau data guru sekolah.</p>
 
     <!-- BANNER -->
-    <section class="top-banner">
-        <div class="label">
-            <i class="fas fa-heart"></i> DATA GURU
-        </div>
-
-        <h3>
-            <i class="fas fa-chalkboard-teacher"></i>
-            Manajemen Data Guru
-        </h3>
+    <div class="welcome-box">
+        <h5>
+            <i class="fas fa-chalkboard-teacher mr-2"></i>
+            Data Guru
+        </h5>
 
         <p>
-            Halaman untuk melihat, mencari, menambahkan,
-            mengubah, dan menghapus data guru.
+            Halaman ini digunakan untuk mengelola informasi guru,
+            mulai dari NIP, nama, email, hingga status keaktifan guru.
         </p>
-    </section>
-
-    <!-- JUDUL DAN TOMBOL -->
-    <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
-        <div>
-            <h4 class="font-weight-bold">Daftar Guru</h4>
-            <p class="text-muted">
-                Data guru yang tersimpan dalam sistem.
-            </p>
-        </div>
-
-        <a href="tambah_guru.php" class="btn btn-add mb-3">
-            <i class="fas fa-plus"></i> Tambah Guru
-        </a>
     </div>
 
-    <!-- TABEL -->
-    <div class="table-card">
+    <!-- STATISTIK -->
+    <div class="row">
 
-        <div class="table-heading">
-            <i class="fas fa-list" style="color:#7764ef"></i>
-            Tabel Data Guru
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon purple">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3><?= $total; ?></h3>
+                <p>Total Data Guru</p>
+            </div>
         </div>
 
-        <p class="table-description">
-            Gunakan kolom pencarian untuk menemukan data guru.
-        </p>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <h3><?= $aktif; ?></h3>
+                <p>Guru Aktif</p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-icon orange">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <h3><?= $nonaktif; ?></h3>
+                <p>Guru Nonaktif</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TABEL GURU -->
+    <div class="content-card">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+
+            <div>
+                <h5>Daftar Guru</h5>
+                <p class="description mb-0">
+                    Berikut merupakan daftar data guru yang terdaftar.
+                </p>
+            </div>
+
+            <a href="tambah_guru.php" class="btn btn-purple mt-2">
+                <i class="fas fa-plus mr-1"></i> Tambah Guru
+            </a>
+
+        </div>
 
         <div class="table-responsive">
-            <table id="tabelGuru"
-                   class="table table-bordered table-striped table-hover">
+
+            <table id="tabelGuru" class="table table-bordered table-hover">
 
                 <thead>
                     <tr>
+                        <th>No</th>
                         <th>NIP</th>
-                        <th>Nama</th>
+                        <th>Nama Guru</th>
                         <th>Email</th>
-                        <th>Status Aktif</th>
+                        <th>Status</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
 
                 <tbody>
-                <?php if ($hasil && mysqli_num_rows($hasil) > 0) { ?>
-                    <?php while ($row = mysqli_fetch_assoc($hasil)) { ?>
+
+                    <?php
+                    $no = 1;
+                    while ($data = mysqli_fetch_assoc($query)) :
+                    ?>
+
                     <tr>
+                        <td><?= $no++; ?></td>
+
                         <td>
-                            <?= htmlspecialchars($row['nip'] ?? '') ?>
+                            <?= htmlspecialchars($data['nip'] ?? '-'); ?>
                         </td>
 
                         <td>
-                            <?= htmlspecialchars($row['nama'] ?? '') ?>
+                            <?= htmlspecialchars($data['nama'] ?? '-'); ?>
                         </td>
 
                         <td>
-                            <?= htmlspecialchars($row['email'] ?? '') ?>
+                            <?= htmlspecialchars($data['email'] ?? '-'); ?>
                         </td>
 
                         <td>
-                            <?php if (($row['status_aktif'] ?? 0) == 1) { ?>
-                                <span class="badge badge-success badge-status">
+                            <?php if ($data['status_aktif'] == 1) : ?>
+                                <span class="badge-status status-aktif">
                                     Aktif
                                 </span>
-                            <?php } else { ?>
-                                <span class="badge badge-danger badge-status">
-                                    Tidak Aktif
+                            <?php else : ?>
+                                <span class="badge-status status-nonaktif">
+                                    Nonaktif
                                 </span>
-                            <?php } ?>
+                            <?php endif; ?>
                         </td>
 
-                        <td class="aksi">
-                            <a href="edit_guru.php?id=<?= (int)$row['id'] ?>"
-                               class="btn btn-info btn-sm">
-                                <i class="fas fa-edit"></i> Edit
+                        <td>
+                            <a href="edit_guru.php?id=<?= (int)$data['id']; ?>"
+                               class="btn btn-warning btn-action"
+                               title="Edit">
+                                <i class="fas fa-edit"></i>
                             </a>
 
-                            <a href="hapus_guru.php?id=<?= (int)$row['id'] ?>"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm('Yakin ingin menghapus guru ini?')">
-                                <i class="fas fa-trash"></i> Hapus
+                            <a href="hapus_guru.php?id=<?= (int)$data['id']; ?>"
+                               class="btn btn-danger btn-action"
+                               title="Hapus"
+                               onclick="return confirm('Yakin ingin menghapus data guru ini?')">
+                                <i class="fas fa-trash"></i>
                             </a>
                         </td>
                     </tr>
-                    <?php } ?>
-                <?php } ?>
+
+                    <?php endwhile; ?>
+
                 </tbody>
 
             </table>
+
         </div>
     </div>
 
-    <div class="footer">
-        Sistem Pelanggaran Siswa &copy; <?= date('Y') ?>
-    </div>
-
-</main>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -435,39 +483,19 @@ body {
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
 
 <script>
-$(document).ready(function () {
+$(document).ready(function() {
     $('#tabelGuru').DataTable({
-        pageLength: 10,
-
-        lengthMenu: [
-            [5, 10, 25, 50, -1],
-            [5, 10, 25, 50, 'Semua']
-        ],
-
-        autoWidth: false,
-        order: [[1, 'asc']],
-
-        columnDefs: [{
-            targets: 4,
-            orderable: false,
-            searchable: false
-        }],
-
         language: {
-            search: 'Cari:',
-            searchPlaceholder: 'Cari data guru...',
-            lengthMenu: 'Tampilkan _MENU_ data',
-            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
-            infoEmpty: 'Tidak ada data',
-            infoFiltered: '(difilter dari _MAX_ total data)',
-            zeroRecords: 'Data guru tidak ditemukan',
-            emptyTable: 'Belum ada data guru',
-
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Tidak ada data",
+            zeroRecords: "Data tidak ditemukan",
             paginate: {
-                first: 'Pertama',
-                last: 'Terakhir',
-                next: 'Berikutnya',
-                previous: 'Sebelumnya'
+                first: "Awal",
+                last: "Akhir",
+                next: "Berikutnya",
+                previous: "Sebelumnya"
             }
         }
     });

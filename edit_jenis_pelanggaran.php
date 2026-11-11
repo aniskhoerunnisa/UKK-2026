@@ -1,48 +1,27 @@
+
 <?php
-// edit_jenis_pelanggaran.php
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-
-if (!$id) {
-    $_SESSION['pesan_error'] = 'ID jenis pelanggaran tidak valid.';
-    header('Location: kelola_jenis_pelanggaran.php');
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header("Location: jenis_pelanggaran.php");
     exit;
 }
 
-// Ambil data yang akan diedit
-$stmt = mysqli_prepare(
-    $koneksi,
-    "SELECT * FROM t_pelanggaran WHERE id = ?"
-);
+$id = (int) $_GET['id'];
 
+// Ambil data jenis pelanggaran
+$stmt = mysqli_prepare($koneksi, "
+    SELECT * FROM t_pelanggaran WHERE id = ?
+");
 mysqli_stmt_bind_param($stmt, "i", $id);
 mysqli_stmt_execute($stmt);
 
-$hasil = mysqli_stmt_get_result($stmt);
-$data = mysqli_fetch_assoc($hasil);
-
-mysqli_stmt_close($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$data = mysqli_fetch_assoc($result);
 
 if (!$data) {
-    $_SESSION['pesan_error'] = 'Data jenis pelanggaran tidak ditemukan.';
-    header('Location: kelola_jenis_pelanggaran.php');
-    exit;
-}
-
-// Ambil kategori aktif dan kategori yang sedang digunakan
-$sql_kategori = "SELECT id, nama, status_aktif
-                 FROM t_pelanggaran_kategori
-                 WHERE status_aktif = 1
-                    OR id = " . (int) $data['pelanggaran_kategori_id'] . "
-                 ORDER BY nama ASC";
-
-$kategori = mysqli_query($koneksi, $sql_kategori);
-
-if (!$kategori) {
-    die("Gagal mengambil kategori: " .
-        htmlspecialchars(mysqli_error($koneksi)));
+    die("Data jenis pelanggaran tidak ditemukan.");
 }
 ?>
 
@@ -50,147 +29,113 @@ if (!$kategori) {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Jenis Pelanggaran - MyWebsite</title>
 
-    <title>Edit Jenis Pelanggaran</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <style>
+        body {
+            background: #f4f6ff;
+            font-family: Arial, sans-serif;
+        }
+
+        .container-edit {
+            max-width: 850px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 13px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(110deg, #5368ed, #8170ed);
+            color: white;
+            padding: 25px 30px;
+        }
+
+        .header h4 {
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .form-content {
+            padding: 30px;
+        }
+
+        .form-control {
+            height: 43px;
+            border-radius: 7px;
+        }
+
+        .btn-simpan {
+            background: #5368ed;
+            color: white;
+            border-radius: 7px;
+            padding: 10px 22px;
+        }
+
+        .btn-simpan:hover {
+            background: #4055d5;
+            color: white;
+        }
+
+        .btn-kembali {
+            border-radius: 7px;
+            padding: 10px 22px;
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container-fluid">
-    <div class="row">
+<div class="container-edit">
 
-        <?php include 'layout/sidebar.php'; ?>
+    <div class="header">
+        <h4><i class="fas fa-exclamation-triangle mr-2"></i> Edit Jenis Pelanggaran</h4>
+        <small>Perbarui data jenis pelanggaran siswa</small>
+    </div>
 
-        <main class="col-md-9 col-lg-10 p-4">
+    <div class="form-content">
 
-            <h1 class="mb-4">Edit Jenis Pelanggaran</h1>
+        <form action="proses_edit_jenis_pelanggaran.php" method="POST">
 
-            <?php if (isset($_SESSION['pesan_error'])) { ?>
-                <div class="alert alert-danger">
-                    <?= htmlspecialchars($_SESSION['pesan_error']); ?>
-                </div>
-                <?php unset($_SESSION['pesan_error']); ?>
-            <?php } ?>
+            <input type="hidden" name="id" value="<?= (int)$data['id']; ?>">
 
-            <div class="card shadow-sm">
-                <div class="card-body">
-
-                    <form action="proses_edit_jenis_pelanggaran.php"
-                          method="POST">
-
-                        <input type="hidden"
-                               name="id"
-                               value="<?= (int) $data['id']; ?>">
-
-                        <div class="mb-3">
-                            <label class="form-label">
-                                Kategori Pelanggaran
-                            </label>
-
-                            <select name="pelanggaran_kategori_id"
-                                    class="form-select" required>
-
-                                <?php while ($kat = mysqli_fetch_assoc($kategori)) { ?>
-                                    <option
-                                        value="<?= (int) $kat['id']; ?>"
-                                        <?= (int) $kat['id'] === (int) $data['pelanggaran_kategori_id']
-                                            ? 'selected'
-                                            : ''; ?>>
-
-                                        <?= htmlspecialchars($kat['nama']); ?>
-
-                                        <?= (int) $kat['status_aktif'] === 0
-                                            ? ' (Tidak Aktif)'
-                                            : ''; ?>
-                                    </option>
-                                <?php } ?>
-
-                            </select>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Kode Pelanggaran</label>
-
-                            <input type="text"
-                                   name="kode"
-                                   class="form-control"
-                                   maxlength="30"
-                                   value="<?= htmlspecialchars($data['kode'] ?? ''); ?>"
-                                   required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Nama Pelanggaran</label>
-
-                            <input type="text"
-                                   name="nama"
-                                   class="form-control"
-                                   maxlength="150"
-                                   value="<?= htmlspecialchars($data['nama'] ?? ''); ?>"
-                                   required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Poin</label>
-
-                            <input type="number"
-                                   name="poin"
-                                   class="form-control"
-                                   min="0"
-                                   value="<?= (int) $data['poin']; ?>"
-                                   required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Deskripsi</label>
-
-                            <textarea name="deskripsi"
-                                      class="form-control"
-                                      rows="4"><?= htmlspecialchars($data['deskripsi'] ?? ''); ?></textarea>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Status Aktif</label>
-
-                            <select name="status_aktif"
-                                    class="form-select" required>
-
-                                <option value="1"
-                                    <?= (int) $data['status_aktif'] === 1
-                                        ? 'selected'
-                                        : ''; ?>>
-                                    Aktif
-                                </option>
-
-                                <option value="0"
-                                    <?= (int) $data['status_aktif'] === 0
-                                        ? 'selected'
-                                        : ''; ?>>
-                                    Tidak Aktif
-                                </option>
-
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">
-                            Update
-                        </button>
-
-                        <a href="kelola_jenis_pelanggaran.php"
-                           class="btn btn-secondary">
-                            Kembali
-                        </a>
-
-                    </form>
-
-                </div>
+            <div class="form-group">
+                <label>Nama Pelanggaran</label>
+                <input type="text"
+                       name="nama"
+                       class="form-control"
+                       value="<?= htmlspecialchars($data['nama']); ?>"
+                       placeholder="Masukkan nama pelanggaran"
+                       required>
             </div>
 
-        </main>
+            <div class="form-group">
+                <label>Poin Pelanggaran</label>
+                <input type="number"
+                       name="poin"
+                       class="form-control"
+                       value="<?= htmlspecialchars($data['poin']); ?>"
+                       min="0"
+                       required>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="jenis_pelanggaran.php" class="btn btn-secondary btn-kembali">
+                    <i class="fas fa-arrow-left mr-1"></i> Kembali
+                </a>
+
+                <button type="submit" class="btn btn-simpan">
+                    <i class="fas fa-save mr-1"></i> Simpan Perubahan
+                </button>
+            </div>
+
+        </form>
+
     </div>
 </div>
 
