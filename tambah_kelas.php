@@ -179,7 +179,7 @@ include 'config/koneksi.php';
             <div class="form-group">
                 <label>Nama Kelas</label>
                 <input type="text" name="nama" class="form-control"
-                       placeholder="Contoh: X RPL 1" required>
+                       placeholder="Contoh: XII BD" required>
             </div>
 
             <div class="mt-4">

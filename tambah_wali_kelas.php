@@ -160,7 +160,7 @@ $data_tahun = mysqli_query($koneksi, "SELECT id, nama FROM t_tahun_ajaran ORDER 
     <a href="kelola_guru.php"><i class="fas fa-chalkboard-teacher"></i> Kelola Guru</a>
     <a href="kelola_wali_kelas.php" class="active"><i class="fas fa-user-tie"></i> Kelola Wali Kelas</a>
     <a href="kelola_kelas.php"><i class="fas fa-school"></i> Kelola Kelas</a>
-    <a href="kelola_tahun_ajaran.php"><i class="fas fa-calendar-alt"></i> Tahun Ajaran</a>
+    <a href="kelola_tahun_ajaran.php"><i class="fas fa-calendar-alt"></i> Kelola Tahun Ajaran</a>
     <a href="penempatan_siswa.php"><i class="fas fa-users"></i> Penempatan Siswa</a>
 
     <div class="menu-title">Pelanggaran</div>
@@ -186,7 +186,7 @@ $data_tahun = mysqli_query($koneksi, "SELECT id, nama FROM t_tahun_ajaran ORDER 
         <form action="proses_tambah_wali_kelas.php" method="POST">
 
             <div class="form-group">
-                <label>Tahun Ajaran</label>
+                <label>Kelola Tahun Ajaran</label>
                 <select name="tahun_ajaran_id" class="form-control" required>
                     <option value="">-- Pilih Tahun Ajaran --</option>
                     <?php while ($tahun = mysqli_fetch_assoc($data_tahun)) : ?>

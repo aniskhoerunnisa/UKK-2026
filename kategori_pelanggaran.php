@@ -18,7 +18,7 @@ if (!$query) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Pelanggaran Kategori</title>
+    <title>kategori pelanggaran</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
 
@@ -282,7 +282,7 @@ if (!$query) {
         </a>
 
         <a href="pelanggaran_kategori.php" class="active">
-            <i class="fas fa-list-alt"></i> Pelanggaran Kategori
+            <i class="fas fa-list-alt"></i> kategori pelanggaran
         </a>
 
         <a href="about_me.php">

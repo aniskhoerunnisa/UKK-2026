@@ -1,4 +1,3 @@
-
 <?php
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
@@ -22,7 +21,7 @@ $nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pe
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Kelola pelanggaran kategori</title>
+    <title>Kelola kategori pelanggaran</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
