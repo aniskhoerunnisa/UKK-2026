@@ -178,8 +178,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <a href="penempatan_siswa.php"><i class="fas fa-users"></i> Penempatan Siswa</a>
 
     <div class="menu-title">Pelanggaran</div>
-    <a href="kelola_pelanggaran_kategori.php" class="active">
-        <i class="fas fa-list-alt"></i> Kategori Pelanggaran
+    <a href="kelola_pelanggaran_kategorin.php" class="active">
+        <i class="fas fa-list-alt"></i> pelanggaran kategori
     </a>
     <a href="kelola_jenis_pelanggaran.php">
         <i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran
@@ -250,7 +250,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <i class="fas fa-save mr-1"></i> Simpan
             </button>
 
-            <a href="kelola_pelanggaran_kategori.php" class="btn btn-light">
+            <a href="kelola_kategori_pelanggaran.php" class="btn btn-light">
                 Batal
             </a>
 

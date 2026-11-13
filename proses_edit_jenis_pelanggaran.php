@@ -1,5 +1,7 @@
+
 <?php
 // proses_edit_jenis_pelanggaran.php
+
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
@@ -27,7 +29,7 @@ $status_aktif = filter_input(
     FILTER_VALIDATE_INT
 );
 
-// Validasi input
+// VALIDASI
 if (
     !$id ||
     !$kategori_id ||
@@ -45,7 +47,7 @@ if (
     exit;
 }
 
-// Pastikan data yang akan diedit tersedia
+// CEK DATA JENIS PELANGGARAN
 $stmt = mysqli_prepare(
     $koneksi,
     "SELECT id FROM t_pelanggaran WHERE id = ?"
@@ -65,7 +67,7 @@ if (!$data_ada) {
     exit;
 }
 
-// Pastikan kategori tersedia
+// CEK KATEGORI PELANGGARAN
 $stmt = mysqli_prepare(
     $koneksi,
     "SELECT id FROM t_pelanggaran_kategori WHERE id = ?"
@@ -85,7 +87,7 @@ if (!$kategori_ada) {
     exit;
 }
 
-// Update data
+// UPDATE DATA JENIS PELANGGARAN
 $sql = "UPDATE t_pelanggaran
         SET pelanggaran_kategori_id = ?,
             kode = ?,
@@ -96,6 +98,12 @@ $sql = "UPDATE t_pelanggaran
         WHERE id = ?";
 
 $stmt = mysqli_prepare($koneksi, $sql);
+
+if (!$stmt) {
+    $_SESSION['pesan_error'] = 'Query update gagal.';
+    header('Location: edit_jenis_pelanggaran.php?id=' . $id);
+    exit;
+}
 
 mysqli_stmt_bind_param(
     $stmt,
@@ -109,7 +117,9 @@ mysqli_stmt_bind_param(
     $id
 );
 
+// EKSEKUSI UPDATE
 if (mysqli_stmt_execute($stmt)) {
+
     mysqli_stmt_close($stmt);
 
     $_SESSION['pesan_sukses'] =
@@ -117,17 +127,20 @@ if (mysqli_stmt_execute($stmt)) {
 
     header('Location: kelola_jenis_pelanggaran.php');
     exit;
-}
 
-$kode_error = mysqli_stmt_errno($stmt);
-mysqli_stmt_close($stmt);
-
-if ($kode_error === 1062) {
-    $_SESSION['pesan_error'] = 'Kode pelanggaran sudah digunakan.';
 } else {
-    $_SESSION['pesan_error'] = 'Gagal memperbarui data jenis pelanggaran.';
-}
 
-header('Location: edit_jenis_pelanggaran.php?id=' . $id);
-exit;
+    $kode_error = mysqli_stmt_errno($stmt);
+    mysqli_stmt_close($stmt);
+
+    if ($kode_error === 1062) {
+        $_SESSION['pesan_error'] = 'Kode pelanggaran sudah digunakan.';
+    } else {
+        $_SESSION['pesan_error'] =
+            'Gagal memperbarui data jenis pelanggaran.';
+    }
+
+    header('Location: edit_jenis_pelanggaran.php?id=' . $id);
+    exit;
+}
 ?>

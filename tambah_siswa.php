@@ -224,7 +224,7 @@ include 'config/koneksi.php';
     <div class="menu-title">Pelanggaran</div>
 
     <a href="kelola_pelanggaran_kategori.php">
-        <i class="fas fa-list-alt"></i> Kategori Pelanggaran
+        <i class="fas fa-list-alt"></i> Pelanggaran kategori
     </a>
 
     <a href="kelola_jenis_pelanggaran.php">

@@ -164,7 +164,7 @@ $data_tahun = mysqli_query($koneksi, "SELECT id, nama FROM t_tahun_ajaran ORDER 
     <a href="penempatan_siswa.php"><i class="fas fa-users"></i> Penempatan Siswa</a>
 
     <div class="menu-title">Pelanggaran</div>
-    <a href="kelola_pelanggaran_kategori.php"><i class="fas fa-list"></i> Kategori Pelanggaran</a>
+    <a href="kelola_pelanggaran_kategori.php"><i class="fas fa-list"></i> Pelanggaran kategori</a>
     <a href="kelola_jenis_pelanggaran.php"><i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran</a>
     <a href="laporan.php"><i class="fas fa-file-alt"></i> Laporan</a>
 

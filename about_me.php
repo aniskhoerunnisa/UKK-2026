@@ -262,7 +262,7 @@ include 'includes/cek_session.php';
     <div class="menu-title">Master Data</div>
     <a href="kelola_siswa.php"><i class="fas fa-user-graduate"></i> Kelola Siswa</a>
     <a href="kelola_guru.php"><i class="fas fa-chalkboard-teacher"></i> Kelola Guru</a>
-    <a href="kelola_wali_kelas.php"><i class="fas fa-user-tie"></i> Wali Kelas</a>
+    <a href="kelola_wali_kelas.php"><i class="fas fa-user-tie"></i> Kelola Wali Kelas</a>
     <a href="kelola_kelas.php"><i class="fas fa-school"></i> Kelola Kelas</a>
     <a href="kelola_tahun_ajaran.php"><i class="fas fa-calendar-alt"></i> Tahun Ajaran</a>
     <a href="penempatan_siswa.php"><i class="fas fa-users"></i> Penempatan Siswa</a>

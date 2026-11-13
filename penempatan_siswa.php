@@ -298,7 +298,7 @@ $totalKelas = mysqli_fetch_assoc($qKelas)['total'];
     </a>
 
     <a href="kelola_wali_kelas.php">
-        <i class="fas fa-user-tie"></i> Wali Kelas
+        <i class="fas fa-user-tie"></i> Kelola Wali Kelas
     </a>
 
     <a href="kelola_kelas.php">
@@ -316,7 +316,7 @@ $totalKelas = mysqli_fetch_assoc($qKelas)['total'];
     <div class="menu-title">Pelanggaran</div>
 
     <a href="kelola_pelanggaran_kategori.php">
-        <i class="fas fa-list-alt"></i> Kategori Pelanggaran
+        <i class="fas fa-list-alt"></i> pelanggaran kategori
     </a>
 
     <a href="kelola_jenis_pelanggaran.php">

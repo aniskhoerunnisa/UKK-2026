@@ -1,19 +1,39 @@
+
 <?php
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-// Ambil data kategori pelanggaran
-$sql = "SELECT * FROM t_kategori_pelanggaran ORDER BY nama_kategori ASC";
+// ========================================
+// AMBIL DATA KATEGORI PELANGGARAN
+// ========================================
+$sql = "SELECT * FROM t_pelanggaran_kategori ORDER BY nama ASC";
 $query = mysqli_query($koneksi, $sql);
 
 if (!$query) {
     die("Query gagal: " . mysqli_error($koneksi));
 }
 
-// Statistik
+// ========================================
+// STATISTIK KATEGORI
+// ========================================
 $total = mysqli_num_rows($query);
-$aktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pelanggaran WHERE status_aktif = 1"));
-$nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pelanggaran WHERE status_aktif = 0"));
+$aktif = 0;
+$nonaktif = 0;
+
+$statistik = mysqli_query(
+    $koneksi,
+    "SELECT status_aktif FROM t_pelanggaran_kategori"
+);
+
+if ($statistik) {
+    while ($status = mysqli_fetch_assoc($statistik)) {
+        if ($status['status_aktif'] == 1) {
+            $aktif++;
+        } else {
+            $nonaktif++;
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -21,14 +41,16 @@ $nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pe
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Kelola kategori pelanggaran</title>
+    <title>Kelola Kategori Pelanggaran</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
 
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -227,6 +249,19 @@ $nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pe
             color: #e34c4c;
         }
 
+        .dataTables_wrapper {
+            font-size: 13px;
+        }
+
+        .dataTables_wrapper .page-item.active .page-link {
+            background: #5368ed;
+            border-color: #5368ed;
+        }
+
+        .dataTables_wrapper .page-link {
+            color: #5368ed;
+        }
+
         @media(max-width: 768px) {
             .sidebar {
                 width: 100%;
@@ -246,51 +281,100 @@ $nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pe
 
 <!-- SIDEBAR -->
 <div class="sidebar">
+
     <div class="brand">
         <i class="fas fa-graduation-cap mr-2"></i> MyWebsite.
     </div>
 
     <div class="menu-title">Menu Utama</div>
-    <a href="dashboard.php"><i class="fas fa-home"></i> Dashboard</a>
+
+    <a href="dashboard.php">
+        <i class="fas fa-home"></i> Dashboard
+    </a>
 
     <div class="menu-title">Master Data</div>
-    <a href="kelola_siswa.php"><i class="fas fa-user-graduate"></i> Kelola Siswa</a>
-    <a href="kelola_guru.php"><i class="fas fa-chalkboard-teacher"></i> Kelola Guru</a>
-    <a href="kelola_wali_kelas.php"><i class="fas fa-user-tie"></i> Wali Kelas</a>
-    <a href="kelola_kelas.php"><i class="fas fa-school"></i> Kelola Kelas</a>
-    <a href="kelola_tahun_ajaran.php"><i class="fas fa-calendar-alt"></i> Tahun Ajaran</a>
-    <a href="penempatan_siswa.php"><i class="fas fa-users"></i> Penempatan Siswa</a>
+
+    <a href="kelola_siswa.php">
+        <i class="fas fa-user-graduate"></i> Kelola Siswa
+    </a>
+
+    <a href="kelola_guru.php">
+        <i class="fas fa-chalkboard-teacher"></i> Kelola Guru
+    </a>
+
+    <a href="kelola_wali_kelas.php">
+        <i class="fas fa-user-tie"></i> Kelola Wali Kelas
+    </a>
+
+    <a href="kelola_kelas.php">
+        <i class="fas fa-school"></i> Kelola Kelas
+    </a>
+
+    <a href="kelola_tahun_ajaran.php">
+        <i class="fas fa-calendar-alt"></i> Tahun Ajaran
+    </a>
+
+    <a href="penempatan_siswa.php">
+        <i class="fas fa-users"></i> Penempatan Siswa
+    </a>
 
     <div class="menu-title">Pelanggaran</div>
-    <a href="kelola_pelanggaran_kategori.php" class="active">
+
+    <a href="kelola_Pelanggaran_kategori.php" class="active">
         <i class="fas fa-list-alt"></i> Kategori Pelanggaran
     </a>
+
     <a href="kelola_jenis_pelanggaran.php">
         <i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran
     </a>
-    <a href="laporan.php"><i class="fas fa-file-alt"></i> Laporan</a>
+
+    <a href="laporan.php">
+        <i class="fas fa-file-alt"></i> Laporan
+    </a>
 
     <div class="menu-title">Lainnya</div>
-    <a href="about_me.php"><i class="fas fa-user"></i> About Me</a>
-    <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+
+    <a href="about_me.php">
+        <i class="fas fa-user"></i> About Me
+    </a>
+
+    <a href="logout.php">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+
 </div>
 
-<!-- KONTEN -->
+<!-- KONTEN UTAMA -->
 <div class="main-content">
 
     <h2 class="page-title">Kelola Kategori Pelanggaran</h2>
-    <p class="subtitle">Kelola data kategori pelanggaran siswa.</p>
 
+    <p class="subtitle">
+        Kelola data kategori pelanggaran siswa.
+    </p>
+
+    <!-- BANNER -->
     <div class="welcome-box">
-        <h5><i class="fas fa-list-alt mr-2"></i> Data Kategori Pelanggaran</h5>
-        <p>Halaman untuk melihat, menambah, mengubah, dan menghapus kategori pelanggaran.</p>
+        <h5>
+            <i class="fas fa-list-alt mr-2"></i>
+            Data Kategori Pelanggaran
+        </h5>
+
+        <p>
+            Halaman untuk melihat, menambah, mengubah,
+            dan menghapus kategori pelanggaran.
+        </p>
     </div>
 
     <!-- STATISTIK -->
     <div class="row">
+
         <div class="col-md-4">
             <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-list"></i></div>
+                <div class="stat-icon">
+                    <i class="fas fa-list"></i>
+                </div>
+
                 <p class="mt-3">Total Kategori</p>
                 <h3><?= $total; ?></h3>
             </div>
@@ -298,7 +382,10 @@ $nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pe
 
         <div class="col-md-4">
             <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+
                 <p class="mt-3">Kategori Aktif</p>
                 <h3><?= $aktif; ?></h3>
             </div>
@@ -306,28 +393,45 @@ $nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pe
 
         <div class="col-md-4">
             <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+
                 <p class="mt-3">Kategori Nonaktif</p>
                 <h3><?= $nonaktif; ?></h3>
             </div>
         </div>
+
     </div>
 
-    <!-- TABEL -->
+    <!-- TABEL KATEGORI -->
     <div class="content-card">
+
         <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+
             <div>
                 <h5>Daftar Kategori Pelanggaran</h5>
-                <p class="description mb-0">Daftar seluruh kategori pelanggaran siswa.</p>
+
+                <p class="description mb-0">
+                    Daftar seluruh kategori pelanggaran siswa.
+                </p>
             </div>
 
-            <a href="tambah_kategori_pelanggaran.php" class="btn btn-purple mt-2">
-                <i class="fas fa-plus mr-1"></i> Tambah Kategori
+            <a href="tambah_kategori_pelanggaran.php"
+               class="btn btn-purple mt-2">
+
+                <i class="fas fa-plus mr-1"></i>
+                Tambah Kategori
+
             </a>
+
         </div>
 
         <div class="table-responsive">
-            <table id="tabelKategori" class="table table-hover table-bordered">
+
+            <table id="tabelKategori"
+                   class="table table-hover table-bordered">
+
                 <thead>
                     <tr>
                         <th>No</th>
@@ -337,42 +441,80 @@ $nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pe
                         <th>Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    <?php $no = 1; while ($data = mysqli_fetch_assoc($query)) : ?>
+
+                    <?php
+                    $no = 1;
+
+                    while ($data = mysqli_fetch_assoc($query)) :
+                    ?>
+
                     <tr>
+
                         <td><?= $no++; ?></td>
-                        <td><?= htmlspecialchars($data['nama_kategori']); ?></td>
-                        <td><?= htmlspecialchars($data['deskripsi'] ?? '-'); ?></td>
+
                         <td>
-                            <?php if ($data['status_aktif'] == 1) : ?>
-                                <span class="badge-status status-aktif">Aktif</span>
-                            <?php else : ?>
-                                <span class="badge-status status-nonaktif">Nonaktif</span>
-                            <?php endif; ?>
+                            <?= htmlspecialchars($data['nama']); ?>
                         </td>
+
                         <td>
-                            <a href="edit_kategori_pelanggaran.php?id=<?= $data['id']; ?>"
+                            <?= htmlspecialchars($data['deskripsi'] ?? '-'); ?>
+                        </td>
+
+                        <td>
+
+                            <?php if ($data['status_aktif'] == 1) : ?>
+
+                                <span class="badge-status status-aktif">
+                                    Aktif
+                                </span>
+
+                            <?php else : ?>
+
+                                <span class="badge-status status-nonaktif">
+                                    Nonaktif
+                                </span>
+
+                            <?php endif; ?>
+
+                        </td>
+
+                        <td>
+
+                            <a href="edit_kategori_pelanggaran.php?id=<?= (int)$data['id']; ?>"
                                class="action-btn edit-btn d-inline-flex align-items-center justify-content-center"
                                title="Edit">
+
                                 <i class="fas fa-edit"></i>
+
                             </a>
 
-                            <a href="hapus_kategori_pelanggaran.php?id=<?= $data['id']; ?>"
+                            <a href="hapus_kategori_pelanggaran.php?id=<?= (int)$data['id']; ?>"
                                class="action-btn delete-btn d-inline-flex align-items-center justify-content-center"
                                onclick="return confirm('Yakin ingin menghapus kategori ini?')"
                                title="Hapus">
+
                                 <i class="fas fa-trash"></i>
+
                             </a>
+
                         </td>
+
                     </tr>
+
                     <?php endwhile; ?>
+
                 </tbody>
+
             </table>
+
         </div>
     </div>
 
 </div>
 
+<!-- JAVASCRIPT -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
@@ -380,13 +522,27 @@ $nonaktif = mysqli_num_rows(mysqli_query($koneksi, "SELECT id FROM t_kategori_pe
 
 <script>
 $(document).ready(function () {
+
     $('#tabelKategori').DataTable({
+
+        pageLength: 10,
+
         language: {
             search: "Cari:",
+            searchPlaceholder: "Cari kategori...",
+
             lengthMenu: "Tampilkan _MENU_ data",
+
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+
             infoEmpty: "Tidak ada data",
+
+            infoFiltered: "(difilter dari _MAX_ total data)",
+
             zeroRecords: "Data tidak ditemukan",
+
+            emptyTable: "Belum ada kategori pelanggaran",
+
             paginate: {
                 first: "Awal",
                 last: "Akhir",
@@ -394,7 +550,9 @@ $(document).ready(function () {
                 previous: "Sebelumnya"
             }
         }
+
     });
+
 });
 </script>
 

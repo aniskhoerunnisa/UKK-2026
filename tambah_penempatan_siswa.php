@@ -212,7 +212,7 @@ if (!$data_siswa || !$data_kelas || !$data_tahun) {
 
     <div class="menu-title">Pelanggaran</div>
     <a href="kelola_pelanggaran_kategori.php">
-        <i class="fas fa-list"></i> Kategori Pelanggaran
+        <i class="fas fa-list"></i> pelanggaran_kategori
     </a>
     <a href="kelola_jenis_pelanggaran.php">
         <i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran

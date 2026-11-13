@@ -4,7 +4,7 @@ include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
 // Ambil data kategori pelanggaran
-$sql = "SELECT * FROM t_kategori_pelanggaran ORDER BY nama_kategori ASC";
+$sql = "SELECT * FROM t_pelanggaran_kategori ORDER BY nama_kategori ASC";
 $query = mysqli_query($koneksi, $sql);
 
 if (!$query) {
@@ -17,19 +17,14 @@ if (!$query) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>kategori pelanggaran</title>
+    <title>Pelanggaran Kategori</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap4.min.css">
 
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
@@ -73,9 +68,7 @@ if (!$query) {
             font-size: 14px;
         }
 
-        .menu a i {
-            width: 25px;
-        }
+        .menu a i { width: 25px; }
 
         .menu a:hover,
         .menu a.active {
@@ -89,9 +82,7 @@ if (!$query) {
             padding-top: 15px;
         }
 
-        .logout {
-            color: #ff5368 !important;
-        }
+        .logout { color: #ff5368 !important; }
 
         .main {
             margin-left: 280px;
@@ -103,9 +94,7 @@ if (!$query) {
             font-weight: bold;
         }
 
-        .page-title span {
-            color: #7764ef;
-        }
+        .page-title span { color: #7764ef; }
 
         .subtitle {
             color: #7e8ca9;
@@ -172,14 +161,10 @@ if (!$query) {
             margin-bottom: 22px;
         }
 
-        #tabelKategori {
-            width: 100% !important;
-        }
+        #tabelKategori { width: 100% !important; }
 
         #tabelKategori th,
-        #tabelKategori td {
-            vertical-align: middle;
-        }
+        #tabelKategori td { vertical-align: middle; }
 
         #tabelKategori thead th {
             background: #202d49;
@@ -188,13 +173,9 @@ if (!$query) {
             white-space: nowrap;
         }
 
-        #tabelKategori td {
-            color: #46536d;
-        }
+        #tabelKategori td { color: #46536d; }
 
-        .aksi {
-            white-space: nowrap;
-        }
+        .aksi { white-space: nowrap; }
 
         .btn-sm {
             border-radius: 7px;
@@ -211,9 +192,7 @@ if (!$query) {
             border-color: #5368ed;
         }
 
-        .dataTables_wrapper .page-link {
-            color: #5368ed;
-        }
+        .dataTables_wrapper .page-link { color: #5368ed; }
 
         .footer {
             color: #8b97ad;
@@ -233,22 +212,16 @@ if (!$query) {
                 padding: 22px 15px;
             }
 
-            .page-title {
-                font-size: 27px;
-            }
+            .page-title { font-size: 27px; }
 
-            .table-card {
-                padding: 15px;
-            }
+            .table-card { padding: 15px; }
         }
     </style>
 </head>
 
 <body>
 
-<!-- SIDEBAR -->
 <aside class="sidebar">
-
     <div class="logo">
         <i class="fas fa-layer-group"></i> MyWebsite.
     </div>
@@ -256,7 +229,6 @@ if (!$query) {
     <div class="menu-label">MENU UTAMA</div>
 
     <nav class="menu">
-
         <a href="dashboard.php">
             <i class="fas fa-th-large"></i> Dashboard
         </a>
@@ -282,7 +254,7 @@ if (!$query) {
         </a>
 
         <a href="pelanggaran_kategori.php" class="active">
-            <i class="fas fa-list-alt"></i> kategori pelanggaran
+            <i class="fas fa-list-alt"></i> Pelanggaran Kategori
         </a>
 
         <a href="about_me.php">
@@ -294,11 +266,9 @@ if (!$query) {
                 <i class="fas fa-sign-out-alt"></i> Logout
             </a>
         </div>
-
     </nav>
 </aside>
 
-<!-- KONTEN UTAMA -->
 <main class="main">
 
     <h1 class="page-title">
@@ -309,9 +279,7 @@ if (!$query) {
         Kelola kategori dan poin pelanggaran siswa ✨
     </p>
 
-    <!-- BANNER -->
     <section class="top-banner">
-
         <div class="label">
             <i class="fas fa-exclamation-circle"></i>
             DATA PELANGGARAN
@@ -326,28 +294,20 @@ if (!$query) {
             Lihat dan kelola berbagai kategori pelanggaran
             beserta poin yang berlaku bagi siswa.
         </p>
-
     </section>
 
-    <!-- JUDUL DAN TOMBOL -->
     <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
-
         <div>
             <h4 class="font-weight-bold">Daftar Kategori Pelanggaran</h4>
-            <p class="text-muted">
-                Data kategori pelanggaran siswa.
-            </p>
+            <p class="text-muted">Data kategori pelanggaran siswa.</p>
         </div>
 
         <a href="tambah_pelanggaran_kategori.php" class="btn btn-add mb-3">
             <i class="fas fa-plus"></i> Tambah Kategori
         </a>
-
     </div>
 
-    <!-- TABEL -->
     <div class="table-card">
-
         <div class="table-heading">
             <i class="fas fa-list" style="color:#7764ef"></i>
             Tabel Kategori Pelanggaran
@@ -358,10 +318,7 @@ if (!$query) {
         </p>
 
         <div class="table-responsive">
-
-            <table id="tabelKategori"
-                   class="table table-bordered table-striped table-hover">
-
+            <table id="tabelKategori" class="table table-bordered table-striped table-hover">
                 <thead>
                     <tr>
                         <th>No.</th>
@@ -373,15 +330,11 @@ if (!$query) {
                 </thead>
 
                 <tbody>
-
                     <?php
                     $no = 1;
-
                     while ($row = mysqli_fetch_assoc($query)) {
                     ?>
-
                     <tr>
-
                         <td><?= $no++ ?></td>
 
                         <td>
@@ -389,7 +342,7 @@ if (!$query) {
                         </td>
 
                         <td>
-                            <?= htmlspecialchars($row['deskripsi']) ?>
+                            <?= htmlspecialchars($row['deskripsi'] ?? '-') ?>
                         </td>
 
                         <td>
@@ -399,30 +352,22 @@ if (!$query) {
                         </td>
 
                         <td class="aksi">
-
-                            <a href="edit_pelanggaran_kategori.php?id=<?= (int)$row['id_kategori'] ?>"
+                            <a href="edit_pelanggaran_kategori.php?id=<?= (int)$row['id'] ?>"
                                class="btn btn-info btn-sm">
                                 <i class="fas fa-edit"></i> Edit
                             </a>
 
-                            <a href="hapus_pelanggaran_kategori.php?id=<?= (int)$row['id_kategori'] ?>"
+                            <a href="hapus_pelanggaran_kategori.php?id=<?= (int)$row['id'] ?>"
                                class="btn btn-danger btn-sm"
                                onclick="return confirm('Yakin ingin menghapus kategori ini?')">
                                 <i class="fas fa-trash"></i> Hapus
                             </a>
-
                         </td>
-
                     </tr>
-
                     <?php } ?>
-
                 </tbody>
-
             </table>
-
         </div>
-
     </div>
 
     <div class="footer">
@@ -432,39 +377,29 @@ if (!$query) {
 </main>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap4.min.js"></script>
 
 <script>
 $(document).ready(function () {
-
     $('#tabelKategori').DataTable({
-
         pageLength: 10,
-
         lengthMenu: [
             [5, 10, 25, 50, -1],
             [5, 10, 25, 50, 'Semua']
         ],
-
         searching: true,
         ordering: true,
         paging: true,
         info: true,
         autoWidth: false,
-
         order: [[1, 'asc']],
-
         columnDefs: [{
             targets: 4,
             orderable: false,
             searchable: false
         }],
-
         language: {
             search: 'Cari:',
             searchPlaceholder: 'Cari kategori...',
@@ -474,7 +409,6 @@ $(document).ready(function () {
             infoFiltered: '(difilter dari _MAX_ total data)',
             zeroRecords: 'Data tidak ditemukan',
             emptyTable: 'Belum ada kategori pelanggaran',
-
             paginate: {
                 first: 'Pertama',
                 last: 'Terakhir',
@@ -482,9 +416,7 @@ $(document).ready(function () {
                 previous: 'Sebelumnya'
             }
         }
-
     });
-
 });
 </script>
 
