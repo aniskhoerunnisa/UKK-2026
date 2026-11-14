@@ -3,7 +3,9 @@
 include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
-// Tahun ajaran aktif
+// ==========================================
+// TAHUN AJARAN AKTIF
+// ==========================================
 $tahun = mysqli_query($koneksi, "
     SELECT id, nama
     FROM t_tahun_ajaran
@@ -17,25 +19,74 @@ if (!$tahun) {
 
 $tahun_aktif = mysqli_fetch_assoc($tahun);
 
-// Guru yang sedang login
-$user_id = $_SESSION['id'] ?? 0;
-
-$stmtGuru = mysqli_prepare($koneksi, "
-    SELECT id, nama
-    FROM t_guru
-    WHERE user_id = ?
-    LIMIT 1
-");
-
-if (!$stmtGuru) {
-    die("Query guru gagal: " . mysqli_error($koneksi));
+if (!$tahun_aktif) {
+    die("Belum ada tahun ajaran aktif. Aktifkan tahun ajaran terlebih dahulu.");
 }
 
-mysqli_stmt_bind_param($stmtGuru, "i", $user_id);
-mysqli_stmt_execute($stmtGuru);
-$guru = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtGuru));
+// ==========================================
+// GURU YANG SEDANG LOGIN
+// ==========================================
+$guru = null;
 
-// Siswa aktif
+// Gunakan guru_id yang sudah tersimpan jika tersedia
+$guru_id_session = (int)($_SESSION['guru_id'] ?? 0);
+
+if ($guru_id_session > 0) {
+    $stmtGuru = mysqli_prepare($koneksi, "
+        SELECT id, nama
+        FROM t_guru
+        WHERE id = ?
+        LIMIT 1
+    ");
+
+    if (!$stmtGuru) {
+        die("Query guru gagal: " . mysqli_error($koneksi));
+    }
+
+    mysqli_stmt_bind_param($stmtGuru, "i", $guru_id_session);
+    mysqli_stmt_execute($stmtGuru);
+    $guru = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtGuru));
+    mysqli_stmt_close($stmtGuru);
+}
+
+// Jika guru_id belum ada, cari berdasarkan ID akun yang login
+if (!$guru) {
+    $user_id = (int)($_SESSION['id_user'] ?? $_SESSION['id'] ?? 0);
+
+    if ($user_id > 0) {
+        $stmtGuru = mysqli_prepare($koneksi, "
+            SELECT id, nama
+            FROM t_guru
+            WHERE user_id = ?
+            LIMIT 1
+        ");
+
+        if (!$stmtGuru) {
+            die("Query guru gagal: " . mysqli_error($koneksi));
+        }
+
+        mysqli_stmt_bind_param($stmtGuru, "i", $user_id);
+        mysqli_stmt_execute($stmtGuru);
+        $guru = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtGuru));
+        mysqli_stmt_close($stmtGuru);
+    }
+}
+
+// Simpan identitas guru ke session
+if ($guru) {
+    $_SESSION['guru_id'] = (int)$guru['id'];
+    $_SESSION['nama_guru'] = $guru['nama'];
+} else {
+    die("
+        Akun guru yang login belum terhubung dengan data guru.
+        Periksa kolom user_id pada tabel t_guru dan pastikan nilainya
+        sesuai dengan ID akun pada tabel t_users.
+    ");
+}
+
+// ==========================================
+// DATA SISWA AKTIF
+// ==========================================
 $siswa = mysqli_query($koneksi, "
     SELECT id, nis, nama
     FROM t_siswa
@@ -47,7 +98,9 @@ if (!$siswa) {
     die("Query siswa gagal: " . mysqli_error($koneksi));
 }
 
-// Jenis pelanggaran
+// ==========================================
+// JENIS PELANGGARAN
+// ==========================================
 $pelanggaran = mysqli_query($koneksi, "
     SELECT id, nama, poin
     FROM t_pelanggaran
@@ -56,14 +109,6 @@ $pelanggaran = mysqli_query($koneksi, "
 
 if (!$pelanggaran) {
     die("Query jenis pelanggaran gagal: " . mysqli_error($koneksi));
-}
-
-if (!$tahun_aktif) {
-    die("Belum ada tahun ajaran aktif. Aktifkan tahun ajaran terlebih dahulu.");
-}
-
-if (!$guru) {
-    die("Akun guru yang login belum terhubung dengan data guru. Periksa hubungan user_id pada tabel t_guru.");
 }
 ?>
 

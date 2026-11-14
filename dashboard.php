@@ -6,20 +6,21 @@ include 'config/koneksi.php';
 // Menghitung jumlah data
 function jumlahData($koneksi, $tabel) {
     $query = mysqli_query($koneksi, "SELECT COUNT(*) AS total FROM `$tabel`");
+
     if (!$query) {
         return 0;
     }
 
     $data = mysqli_fetch_assoc($query);
-    return $data['total'];
+    return $data['total'] ?? 0;
 }
 
 $totalSiswa = jumlahData($koneksi, 't_siswa');
 $totalGuru  = jumlahData($koneksi, 't_guru');
 $totalKelas = jumlahData($koneksi, 't_kelas');
 
-$namaUser = $_SESSION['nama'] ?? 'Pengguna';
-$roleUser = $_SESSION['role'] ?? 'Admin';
+$namaUser = $_SESSION['nama'] ?? $_SESSION['nama_lengkap'] ?? 'Pengguna';
+$roleUser = $_SESSION['role'] ?? 'Pengguna';
 ?>
 
 <!DOCTYPE html>
@@ -44,56 +45,10 @@ $roleUser = $_SESSION['role'] ?? 'Admin';
             color: #253451;
         }
 
-        /* SIDEBAR */
-        .sidebar {
-            width: 243px;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background: #202b46;
-            padding: 25px 16px;
-            overflow-y: auto;
-            z-index: 100;
-        }
-
-        .brand {
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            padding: 5px 12px 30px;
-        }
-
-        .menu-title {
-            color: #929db5;
-            font-size: 11px;
-            margin: 18px 12px 10px;
-            text-transform: uppercase;
-        }
-
-        .sidebar a {
-            display: block;
-            color: #c4ccdc;
-            text-decoration: none;
-            padding: 12px 13px;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .sidebar a i {
-            width: 23px;
-        }
-
-        .sidebar a:hover,
-        .sidebar a.active {
-            background: #5368ed;
-            color: white;
-        }
-
-        /* KONTEN */
+        /* KONTEN DASHBOARD */
         .main-content {
-            margin-left: 243px;
+            margin-left: 250px;
+            width: calc(100% - 250px);
             padding: 30px;
         }
 
@@ -221,14 +176,9 @@ $roleUser = $_SESSION['role'] ?? 'Admin';
         }
 
         @media(max-width: 768px) {
-            .sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-            }
-
             .main-content {
-                margin-left: 0;
+                margin-left: 210px;
+                width: calc(100% - 210px);
                 padding: 18px;
             }
 
@@ -241,185 +191,125 @@ $roleUser = $_SESSION['role'] ?? 'Admin';
 
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
+    <!-- MEMANGGIL SIDEBAR SESUAI ROLE LOGIN -->
+    <?php require_once __DIR__ . '/layout/sidebar.php'; ?>
 
-    <div class="brand">
-        <i class="fas fa-graduation-cap mr-2"></i> MyWebsite.
-    </div>
+    <!-- KONTEN DASHBOARD -->
+    <div class="main-content">
 
-    <div class="menu-title">Menu Utama</div>
+        <!-- WELCOME -->
+        <div class="welcome-box">
 
-    <a href="dashboard.php" class="active">
-        <i class="fas fa-home"></i> Dashboard
-    </a>
+            <div class="welcome-decoration"></div>
 
-    <div class="menu-title">Master Data</div>
+            <h3>
+                Hai <?= htmlspecialchars($namaUser); ?>, 👋
+            </h3>
 
-    <a href="kelola_siswa.php">
-        <i class="fas fa-user-graduate"></i> Kelola Siswa
-    </a>
+            <p>
+                Selamat datang di halaman dashboard Sistem Pelanggaran Siswa.
+                Kelola informasi siswa,<br>
+                guru, dan kelas sekolah dengan mudah melalui satu halaman.
+            </p>
 
-    <a href="kelola_guru.php">
-        <i class="fas fa-chalkboard-teacher"></i> Kelola Guru
-    </a>
+            <p class="keep">
+                Keep learning, keep growing! 🚀
+            </p>
 
-    <a href="kelola_wali_kelas.php">
-        <i class="fas fa-user-tie"></i> Kelola Wali Kelas
-    </a>
-
-    <a href="kelola_kelas.php">
-        <i class="fas fa-school"></i> Kelola Kelas
-    </a>
-
-    <a href="kelola_tahun_ajaran.php">
-        <i class="fas fa-calendar-alt"></i> Tahun Ajaran
-    </a>
-
-    <a href="penempatan_siswa.php">
-        <i class="fas fa-users"></i> Penempatan Siswa
-    </a>
-
-    <div class="menu-title">Pelanggaran</div>
-
-    <a href="kelola_pelanggaran_kategori.php">
-        <i class="fas fa-list-alt"></i> Kategori Pelanggaran
-    </a>
-
-    <a href="kelola_jenis_pelanggaran.php">
-        <i class="fas fa-exclamation-triangle"></i> Jenis Pelanggaran
-    </a>
-
-    <a href="laporan.php">
-        <i class="fas fa-file-alt"></i> Laporan
-    </a>
-
-    <div class="menu-title">Lainnya</div>
-
-    <a href="about_me.php">
-        <i class="fas fa-user"></i> About Me
-    </a>
-
-    <a href="logout.php">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
-
-</div>
-
-<!-- KONTEN DASHBOARD -->
-<div class="main-content">
-
-    <!-- WELCOME -->
-    <div class="welcome-box">
-
-        <div class="welcome-decoration"></div>
-
-        <h3>
-            Hai <?= htmlspecialchars($namaUser); ?>, 👋
-        </h3>
-
-        <p>
-            Selamat datang di halaman dashboard Sistem Pelanggaran Siswa.
-            Kelola informasi siswa,<br>
-            guru, dan kelas sekolah dengan mudah melalui satu halaman.
-        </p>
-
-        <p class="keep">
-            Keep learning, keep growing! 🚀
-        </p>
-
-    </div>
-
-    <!-- STATISTIK -->
-    <div class="row">
-
-        <div class="col-lg-4 col-md-6">
-            <div class="stat-card">
-
-                <div class="stat-icon icon-siswa">
-                    <i class="fas fa-user-graduate"></i>
-                </div>
-
-                <h3><?= $totalSiswa; ?></h3>
-                <p>Total Data Siswa</p>
-
-            </div>
         </div>
 
-        <div class="col-lg-4 col-md-6">
-            <div class="stat-card">
+        <!-- STATISTIK -->
+        <div class="row">
 
-                <div class="stat-icon icon-guru">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="stat-card">
 
-                <h3><?= $totalGuru; ?></h3>
-                <p>Total Data Guru</p>
-
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-md-6">
-            <div class="stat-card">
-
-                <div class="stat-icon icon-kelas">
-                    <i class="fas fa-school"></i>
-                </div>
-
-                <h3><?= $totalKelas; ?></h3>
-                <p>Total Data Kelas</p>
-
-            </div>
-        </div>
-
-    </div>
-
-    <!-- INFORMASI BAWAH -->
-    <div class="row">
-
-        <div class="col-lg-7 mb-3">
-            <div class="info-card">
-
-                <div class="info-title">
-                    <div class="info-icon">
-                        <i class="fas fa-lightbulb"></i>
+                    <div class="stat-icon icon-siswa">
+                        <i class="fas fa-user-graduate"></i>
                     </div>
-                    Tentang Sistem
+
+                    <h3><?= $totalSiswa; ?></h3>
+                    <p>Total Data Siswa</p>
+
                 </div>
-
-                <p>
-                    Sistem Pelanggaran Siswa merupakan website untuk membantu
-                    pengelolaan data sekolah. Informasi siswa, guru, dan kelas
-                    dapat dikelola dengan lebih rapi, praktis, dan terstruktur.
-                </p>
-
             </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="stat-card">
+
+                    <div class="stat-icon icon-guru">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+
+                    <h3><?= $totalGuru; ?></h3>
+                    <p>Total Data Guru</p>
+
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="stat-card">
+
+                    <div class="stat-icon icon-kelas">
+                        <i class="fas fa-school"></i>
+                    </div>
+
+                    <h3><?= $totalKelas; ?></h3>
+                    <p>Total Data Kelas</p>
+
+                </div>
+            </div>
+
         </div>
 
-        <div class="col-lg-5 mb-3">
-            <div class="info-card">
+        <!-- INFORMASI BAWAH -->
+        <div class="row">
 
-                <div class="info-title">
-                    <div class="info-icon">
-                        <i class="fas fa-user"></i>
+            <div class="col-lg-7 mb-3">
+                <div class="info-card">
+
+                    <div class="info-title">
+                        <div class="info-icon">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        Tentang Sistem
                     </div>
-                    Informasi Akun
+
+                    <p>
+                        Sistem Pelanggaran Siswa merupakan website untuk membantu
+                        pengelolaan data sekolah. Informasi siswa, guru, dan kelas
+                        dapat dikelola dengan lebih rapi, praktis, dan terstruktur.
+                    </p>
+
                 </div>
-
-                <p>
-                    Nama: <strong><?= htmlspecialchars($namaUser); ?></strong>
-                </p>
-
-                <p>
-                    Role: <strong><?= htmlspecialchars($roleUser); ?></strong>
-                </p>
-
             </div>
+
+            <div class="col-lg-5 mb-3">
+                <div class="info-card">
+
+                    <div class="info-title">
+                        <div class="info-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        Informasi Akun
+                    </div>
+
+                    <p>
+                        Nama:
+                        <strong><?= htmlspecialchars($namaUser); ?></strong>
+                    </p>
+
+                    <p>
+                        Role:
+                        <strong><?= htmlspecialchars($roleUser); ?></strong>
+                    </p>
+
+                </div>
+            </div>
+
         </div>
 
     </div>
-
-</div>
 
 </body>
 </html>

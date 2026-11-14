@@ -1,239 +1,209 @@
 
 <?php
-$current_page = basename($_SERVER['PHP_SELF']);
-$role = strtolower($_SESSION['role'] ?? '');
-
-$is_walikelas = false;
-
-// CEK GURU YANG LOGIN
-if ($role == 'guru' && isset($koneksi)) {
-
-    $id_user = (int)($_SESSION['id'] ?? $_SESSION['id_user'] ?? 0);
-
-    if ($id_user > 0) {
-
-        $query_guru = mysqli_prepare(
-            $koneksi,
-            "SELECT id FROM t_guru WHERE user_id = ? LIMIT 1"
-        );
-
-        if ($query_guru) {
-            mysqli_stmt_bind_param($query_guru, "i", $id_user);
-            mysqli_stmt_execute($query_guru);
-
-            $hasil_guru = mysqli_stmt_get_result($query_guru);
-            $data_guru = mysqli_fetch_assoc($hasil_guru);
-
-            if ($data_guru) {
-
-                $id_guru = (int)$data_guru['id'];
-
-                $query_wali = mysqli_prepare(
-                    $koneksi,
-                    "SELECT id
-                     FROM t_wali_kelas
-                     WHERE guru_id = ?
-                       AND status_aktif = 1
-                     LIMIT 1"
-                );
-
-                if ($query_wali) {
-                    mysqli_stmt_bind_param($query_wali, "i", $id_guru);
-                    mysqli_stmt_execute($query_wali);
-
-                    $hasil_wali = mysqli_stmt_get_result($query_wali);
-
-                    if (mysqli_num_rows($hasil_wali) > 0) {
-                        $is_walikelas = true;
-                    }
-
-                    mysqli_stmt_close($query_wali);
-                }
-            }
-
-            mysqli_stmt_close($query_guru);
-        }
-    }
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
+
+$current_page = basename($_SERVER['PHP_SELF']);
+
+// Mengambil role dari session login
+$role = strtolower(trim($_SESSION['role'] ?? ''));
+
+// Menentukan apakah yang login adalah guru
+$is_guru = ($role === 'guru');
 ?>
 
 <style>
-.sidebar-menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 222px;
-    height: 100vh;
-    background: #212529;
-    color: white;
-    padding: 8px;
-    overflow-y: auto;
-    z-index: 1000;
-    box-sizing: border-box;
-}
-
-.sidebar-menu h5 {
-    color: white;
-    font-size: 20px;
-    font-weight: bold;
-    margin: 10px 4px 25px;
-}
-
-.sidebar-menu .menu-label {
-    color: #8492a6;
-    font-size: 12px;
-    margin: 15px 8px 8px;
-}
-
-.sidebar-menu .nav-link {
-    color: white;
-    padding: 11px 16px;
-    border-radius: 7px;
-    margin-bottom: 4px;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-}
-
-.sidebar-menu .nav-link:hover {
-    background: #343a40;
-    color: white;
-}
-
-.sidebar-menu .nav-link.active {
-    background: #0d6efd;
-    color: white;
-}
-
-.sidebar-menu hr {
-    border-color: #495057;
-    margin: 18px 0;
-}
-
-.sidebar-menu .logout {
-    color: #ff3547;
-}
-
-.sidebar-menu .logout:hover {
-    color: #ff3547;
-    background: #343a40;
-}
-
-@media (max-width: 767px) {
-    .sidebar-menu {
-        width: 190px;
+    .sidebar-custom {
+        width: 250px;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #263b80, #202b46);
+        color: white;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
+        padding: 25px 15px;
+        overflow-y: auto;
     }
-}
+
+    .sidebar-custom .brand {
+        font-size: 25px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 35px;
+        color: white;
+    }
+
+    .sidebar-custom .menu-title {
+        font-size: 12px;
+        color: #b9c5e8;
+        margin: 20px 12px 10px;
+        text-transform: uppercase;
+    }
+
+    .sidebar-custom a {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        padding: 13px 15px;
+        margin-bottom: 7px;
+        color: #e8ecff;
+        text-decoration: none;
+        border-radius: 10px;
+        transition: 0.2s;
+        font-size: 15px;
+    }
+
+    .sidebar-custom a:hover,
+    .sidebar-custom a.active {
+        background: #637fe0;
+        color: white;
+    }
+
+    .sidebar-custom a i {
+        width: 20px;
+        text-align: center;
+    }
+
+    .sidebar-custom .logout {
+        margin-top: 30px;
+        background: #dc3545;
+        color: white;
+    }
+
+    .sidebar-custom .logout:hover {
+        background: #bd2130;
+    }
+
+    .main-content {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+        padding: 25px;
+    }
+
+    @media (max-width: 768px) {
+        .sidebar-custom {
+            width: 210px;
+        }
+
+        .main-content {
+            margin-left: 210px;
+            width: calc(100% - 210px);
+        }
+    }
 </style>
 
-<aside class="sidebar-menu">
+<div class="sidebar-custom">
 
-    <h5>
-        Pelanggaran Siswa
-    </h5>
+    <div class="brand">
+        <i class="fas fa-book-open"></i>
+        MyWebsite.
+    </div>
 
-    <hr>
+    <div class="menu-title">Menu Utama</div>
 
-    <?php if ($role == 'admin') { ?>
+    <a href="dashboard.php"
+       class="<?= $current_page == 'dashboard.php' ? 'active' : '' ?>">
+        <i class="fas fa-home"></i>
+        Dashboard
+    </a>
 
-        <div class="menu-label">MENU ADMIN</div>
+    <?php if ($is_guru): ?>
 
-        <a href="dashboard.php"
-           class="nav-link <?= $current_page == 'dashboard.php' ? 'active' : ''; ?>">
-            <i class="fas fa-home"></i>
-            Dashboard
-        </a>
+        <!-- MENU KHUSUS GURU -->
 
-        <a href="kelola_user.php"
-           class="nav-link <?= $current_page == 'kelola_user.php' ? 'active' : ''; ?>">
-            <i class="fas fa-user-cog"></i>
-            Kelola User
-        </a>
-
-        <a href="kelola_guru.php"
-           class="nav-link <?= $current_page == 'kelola_guru.php' ? 'active' : ''; ?>">
-            <i class="fas fa-chalkboard-teacher"></i>
-            Kelola Guru
-        </a>
-
-        <a href="kelola_siswa.php"
-           class="nav-link <?= $current_page == 'kelola_siswa.php' ? 'active' : ''; ?>">
-            <i class="fas fa-users"></i>
-            Kelola Siswa
-        </a>
-
-        <a href="kelola_kelas.php"
-           class="nav-link <?= $current_page == 'kelola_kelas.php' ? 'active' : ''; ?>">
-            <i class="fas fa-school"></i>
-            Kelola Kelas
-        </a>
-
-        <a href="kelola_catat.php"
-           class="nav-link <?= $current_page == 'kelola_catat.php' ? 'active' : ''; ?>">
-            <i class="fas fa-clipboard-list"></i>
-            Kelola Catatan
-        </a>
-
-        <a href="laporan.php"
-           class="nav-link <?= $current_page == 'laporan.php' ? 'active' : ''; ?>">
-            <i class="fas fa-file-alt"></i>
-            Laporan
-        </a>
-
-    <?php } elseif ($role == 'guru') { ?>
-
-        <div class="menu-label">MENU GURU</div>
-
-        <a href="dashboard.php"
-           class="nav-link <?= $current_page == 'dashboard.php' ? 'active' : ''; ?>">
-            <i class="fas fa-home"></i>
-            Dashboard
-        </a>
+        <div class="menu-title">Menu Guru</div>
 
         <a href="catat_pelanggaran.php"
-           class="nav-link <?= $current_page == 'catat_pelanggaran.php' ? 'active' : ''; ?>">
+           class="<?= $current_page == 'catat_pelanggaran.php' ? 'active' : '' ?>">
             <i class="fas fa-edit"></i>
             Catat Pelanggaran
         </a>
 
+        <a href="tindakan.php"
+           class="<?= $current_page == 'tindakan.php' ? 'active' : '' ?>">
+            <i class="fas fa-clipboard-check"></i>
+            Tindakan
+        </a>
+
         <a href="riwayat.php"
-           class="nav-link <?= $current_page == 'riwayat.php' ? 'active' : ''; ?>">
+           class="<?= $current_page == 'riwayat.php' ? 'active' : '' ?>">
             <i class="fas fa-history"></i>
             Riwayat
         </a>
 
         <a href="rekap_poin.php"
-           class="nav-link <?= $current_page == 'rekap_poin.php' ? 'active' : ''; ?>">
+           class="<?= $current_page == 'rekap_poin.php' ? 'active' : '' ?>">
             <i class="fas fa-chart-bar"></i>
             Rekap Poin
         </a>
 
-        <?php if ($is_walikelas) { ?>
+    <?php else: ?>
 
-            <hr>
+        <!-- MENU ADMIN -->
 
-            <div class="menu-label">MENU WALI KELAS</div>
+        <div class="menu-title">Master Data</div>
 
-            <a href="laporan.php"
-               class="nav-link <?= $current_page == 'laporan.php' ? 'active' : ''; ?>">
-                <i class="fas fa-file-alt"></i>
-                Laporan Wali Kelas
-            </a>
+        <a href="kelola_siswa.php"
+           class="<?= $current_page == 'kelola_siswa.php' ? 'active' : '' ?>">
+            <i class="fas fa-user-graduate"></i>
+            Kelola Siswa
+        </a>
 
-        <?php } ?>
+        <a href="kelola_guru.php"
+           class="<?= $current_page == 'kelola_guru.php' ? 'active' : '' ?>">
+            <i class="fas fa-chalkboard-teacher"></i>
+            Kelola Guru
+        </a>
 
-    <?php } ?>
+        <a href="kelola_wali_kelas.php"
+           class="<?= $current_page == 'kelola_wali_kelas.php' ? 'active' : '' ?>">
+            <i class="fas fa-users"></i>
+            Kelola Wali Kelas
+        </a>
 
-    <hr>
+        <a href="kelola_kelas.php"
+           class="<?= $current_page == 'kelola_kelas.php' ? 'active' : '' ?>">
+            <i class="fas fa-school"></i>
+            Kelola Kelas
+        </a>
 
-    <a href="logout.php"
-       class="nav-link logout"
-       onclick="return confirm('Yakin ingin logout?')">
+        <a href="kelola_tahun_ajaran.php"
+           class="<?= $current_page == 'kelola_tahun_ajaran.php' ? 'active' : '' ?>">
+            <i class="fas fa-calendar-alt"></i>
+            Tahun Ajaran
+        </a>
 
+        <a href="penempatan_siswa.php"
+           class="<?= $current_page == 'penempatan_siswa.php' ? 'active' : '' ?>">
+            <i class="fas fa-users"></i>
+            Penempatan Siswa
+        </a>
+
+        <a href="pelanggaran_kategori.php"
+           class="<?= $current_page == 'pelanggaran_kategori.php' ? 'active' : '' ?>">
+            <i class="fas fa-list"></i>
+            Pelanggaran Kategori
+        </a>
+
+        <a href="kelola_jenis_pelanggaran.php"
+           class="<?= $current_page == 'kelola_jenis_pelanggaran.php' ? 'active' : '' ?>">
+            <i class="fas fa-exclamation-triangle"></i>
+            Jenis Pelanggaran
+        </a>
+
+        <a href="laporan.php"
+           class="<?= $current_page == 'laporan.php' ? 'active' : '' ?>">
+            <i class="fas fa-file-alt"></i>
+            Laporan
+        </a>
+
+    <?php endif; ?>
+
+    <a href="logout.php" class="logout">
         <i class="fas fa-sign-out-alt"></i>
         Logout
     </a>
 
-</aside>
+</div>

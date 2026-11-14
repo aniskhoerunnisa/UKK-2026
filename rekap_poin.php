@@ -9,27 +9,20 @@ include 'includes/cek_session.php';
 include 'config/koneksi.php';
 
 // ============================================
-// 2. MENGAMBIL INPUT PENCARIAN DAN FILTER
+// 2. INPUT PENCARIAN DAN FILTER
 // ============================================
-$cari = isset($_GET['cari'])
-    ? trim($_GET['cari'])
-    : '';
-
-$kelas_filter = isset($_GET['kelas'])
-    ? trim($_GET['kelas'])
-    : '';
+$cari = isset($_GET['cari']) ? trim($_GET['cari']) : '';
+$kelas_filter = isset($_GET['kelas']) ? trim($_GET['kelas']) : '';
 
 $cari_sql = mysqli_real_escape_string($koneksi, $cari);
 $kelas_sql = mysqli_real_escape_string($koneksi, $kelas_filter);
 
 // ============================================
-// 3. MENGAMBIL DATA KELAS UNTUK FILTER
+// 3. DATA KELAS
 // ============================================
 $query_kelas = mysqli_query(
     $koneksi,
-    "SELECT id, nama
-     FROM t_kelas
-     ORDER BY nama ASC"
+    "SELECT id, nama FROM t_kelas ORDER BY nama ASC"
 );
 
 if (!$query_kelas) {
@@ -144,6 +137,33 @@ $jumlah_siswa = count($data_rekap);
             color: #0d6efd;
         }
 
+        /* =====================================
+           POSISI KONTEN DI SEBELAH SIDEBAR
+        ===================================== */
+        .rekap-content {
+            margin-left: 350px;
+            width: calc(100% - 350px);
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .rekap-content .container-fluid {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 768px) {
+            .rekap-content {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
         @media print {
             .no-print,
             .dt-search,
@@ -153,7 +173,8 @@ $jumlah_siswa = count($data_rekap);
                 display: none !important;
             }
 
-            main {
+            .rekap-content {
+                margin-left: 0 !important;
                 width: 100% !important;
             }
 
@@ -174,10 +195,11 @@ $jumlah_siswa = count($data_rekap);
 <div class="container-fluid">
     <div class="row">
 
+        <!-- SIDEBAR -->
         <?php include 'layout/sidebar.php'; ?>
 
-        <!-- KONTEN -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <!-- KONTEN UTAMA -->
+        <main class="rekap-content p-4">
 
             <div class="container-fluid">
 
@@ -328,7 +350,6 @@ $jumlah_siswa = count($data_rekap);
                                 <tbody>
                                     <?php foreach ($data_rekap as $data) { ?>
                                         <tr>
-                                            <!-- Nomor otomatis oleh DataTables -->
                                             <td></td>
 
                                             <td>
@@ -383,7 +404,7 @@ $jumlah_siswa = count($data_rekap);
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
-<!-- Inisialisasi DataTables -->
+<!-- INISIALISASI DATATABLES -->
 <script>
 $(document).ready(function () {
     $('#tabelRekap').DataTable({
@@ -394,10 +415,8 @@ $(document).ready(function () {
         ordering: true,
         paging: true,
 
-        // Total poin tertinggi ditampilkan lebih dahulu
         order: [[5, 'desc'], [2, 'asc']],
 
-        // Kolom No tidak perlu diurutkan atau dicari
         columnDefs: [
             {
                 orderable: false,
@@ -406,7 +425,6 @@ $(document).ready(function () {
             }
         ],
 
-        // Nomor mengikuti hasil pencarian dan halaman aktif
         drawCallback: function () {
             var api = this.api();
             var nomorAwal = api.page.info().start;
