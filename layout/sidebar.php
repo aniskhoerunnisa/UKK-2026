@@ -1,167 +1,239 @@
 
 <?php
-// Mengambil nama halaman yang sedang dibuka
 $current_page = basename($_SERVER['PHP_SELF']);
+$role = strtolower($_SESSION['role'] ?? '');
 
-// Mengambil role pengguna yang login
-$role = $_SESSION['role'] ?? '';
-
-// Default: pengguna bukan wali kelas
 $is_walikelas = false;
 
-// Mengecek apakah guru yang login merupakan wali kelas aktif
+// CEK GURU YANG LOGIN
 if ($role == 'guru' && isset($koneksi)) {
 
-    $id_user = $_SESSION['id_user'] ?? 0;
+    $id_user = (int)($_SESSION['id'] ?? $_SESSION['id_user'] ?? 0);
 
-    // Mencari ID guru berdasarkan akun yang login
-    $query_guru = mysqli_prepare(
-        $koneksi,
-        "SELECT id FROM t_guru WHERE user_id = ? LIMIT 1"
-    );
+    if ($id_user > 0) {
 
-    if ($query_guru) {
-        mysqli_stmt_bind_param($query_guru, "i", $id_user);
-        mysqli_stmt_execute($query_guru);
+        $query_guru = mysqli_prepare(
+            $koneksi,
+            "SELECT id FROM t_guru WHERE user_id = ? LIMIT 1"
+        );
 
-        $hasil_guru = mysqli_stmt_get_result($query_guru);
-        $data_guru = mysqli_fetch_assoc($hasil_guru);
+        if ($query_guru) {
+            mysqli_stmt_bind_param($query_guru, "i", $id_user);
+            mysqli_stmt_execute($query_guru);
 
-        // Jika data guru ditemukan, periksa penugasan wali kelas
-        if ($data_guru) {
-            $id_guru = $data_guru['id'];
+            $hasil_guru = mysqli_stmt_get_result($query_guru);
+            $data_guru = mysqli_fetch_assoc($hasil_guru);
 
-            $query_wali = mysqli_prepare(
-                $koneksi,
-                "SELECT id
-                 FROM t_wali_kelas
-                 WHERE guru_id = ?
-                   AND status_aktif = 1
-                 LIMIT 1"
-            );
+            if ($data_guru) {
 
-            if ($query_wali) {
-                mysqli_stmt_bind_param(
-                    $query_wali,
-                    "i",
-                    $id_guru
+                $id_guru = (int)$data_guru['id'];
+
+                $query_wali = mysqli_prepare(
+                    $koneksi,
+                    "SELECT id
+                     FROM t_wali_kelas
+                     WHERE guru_id = ?
+                       AND status_aktif = 1
+                     LIMIT 1"
                 );
 
-                mysqli_stmt_execute($query_wali);
+                if ($query_wali) {
+                    mysqli_stmt_bind_param($query_wali, "i", $id_guru);
+                    mysqli_stmt_execute($query_wali);
 
-                $hasil_wali = mysqli_stmt_get_result($query_wali);
+                    $hasil_wali = mysqli_stmt_get_result($query_wali);
 
-                if (mysqli_num_rows($hasil_wali) > 0) {
-                    $is_walikelas = true;
+                    if (mysqli_num_rows($hasil_wali) > 0) {
+                        $is_walikelas = true;
+                    }
+
+                    mysqli_stmt_close($query_wali);
                 }
-
-                mysqli_stmt_close($query_wali);
             }
-        }
 
-        mysqli_stmt_close($query_guru);
+            mysqli_stmt_close($query_guru);
+        }
     }
 }
 ?>
 
-<!-- Sidebar -->
-<div class="position-fixed top-0 start-0 vh-100
-            bg-dark text-white p-2 overflow-y-auto"
-     style="width: 222px; z-index: 1000;">
+<style>
+.sidebar-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 222px;
+    height: 100vh;
+    background: #212529;
+    color: white;
+    padding: 8px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-sizing: border-box;
+}
 
-    <h5 class="fw-bold mt-2 mb-4 ms-1">
+.sidebar-menu h5 {
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    margin: 10px 4px 25px;
+}
+
+.sidebar-menu .menu-label {
+    color: #8492a6;
+    font-size: 12px;
+    margin: 15px 8px 8px;
+}
+
+.sidebar-menu .nav-link {
+    color: white;
+    padding: 11px 16px;
+    border-radius: 7px;
+    margin-bottom: 4px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+}
+
+.sidebar-menu .nav-link:hover {
+    background: #343a40;
+    color: white;
+}
+
+.sidebar-menu .nav-link.active {
+    background: #0d6efd;
+    color: white;
+}
+
+.sidebar-menu hr {
+    border-color: #495057;
+    margin: 18px 0;
+}
+
+.sidebar-menu .logout {
+    color: #ff3547;
+}
+
+.sidebar-menu .logout:hover {
+    color: #ff3547;
+    background: #343a40;
+}
+
+@media (max-width: 767px) {
+    .sidebar-menu {
+        width: 190px;
+    }
+}
+</style>
+
+<aside class="sidebar-menu">
+
+    <h5>
         Pelanggaran Siswa
     </h5>
 
-    <nav class="nav nav-pills flex-column gap-1">
+    <hr>
 
-        <!-- Menu untuk semua pengguna yang sudah login -->
-        <a href="about_me.php"
-           class="nav-link <?= $current_page == 'about_me.php' ? 'active' : 'text-white'; ?>">
-            About Me
+    <?php if ($role == 'admin') { ?>
+
+        <div class="menu-label">MENU ADMIN</div>
+
+        <a href="dashboard.php"
+           class="nav-link <?= $current_page == 'dashboard.php' ? 'active' : ''; ?>">
+            <i class="fas fa-home"></i>
+            Dashboard
         </a>
 
-        <?php if ($role == 'admin') { ?>
+        <a href="kelola_user.php"
+           class="nav-link <?= $current_page == 'kelola_user.php' ? 'active' : ''; ?>">
+            <i class="fas fa-user-cog"></i>
+            Kelola User
+        </a>
 
-            <!-- Menu khusus Admin -->
-            <hr class="border-secondary">
-            <div class="text-secondary small ms-2">MENU ADMIN</div>
+        <a href="kelola_guru.php"
+           class="nav-link <?= $current_page == 'kelola_guru.php' ? 'active' : ''; ?>">
+            <i class="fas fa-chalkboard-teacher"></i>
+            Kelola Guru
+        </a>
 
-            <a href="dashboard.php"
-               class="nav-link <?= $current_page == 'dashboard.php' ? 'active' : 'text-white'; ?>">
-                dashboard
-            </a>
+        <a href="kelola_siswa.php"
+           class="nav-link <?= $current_page == 'kelola_siswa.php' ? 'active' : ''; ?>">
+            <i class="fas fa-users"></i>
+            Kelola Siswa
+        </a>
 
-            <a href="kelola_user.php"
-               class="nav-link <?= $current_page == 'kelola_user.php' ? 'active' : 'text-white'; ?>">
-                Kelola User
-            </a>
+        <a href="kelola_kelas.php"
+           class="nav-link <?= $current_page == 'kelola_kelas.php' ? 'active' : ''; ?>">
+            <i class="fas fa-school"></i>
+            Kelola Kelas
+        </a>
 
-            <a href="kelola_guru.php"
-               class="nav-link <?= $current_page == 'kelola_guru.php' ? 'active' : 'text-white'; ?>">
-                Kelola Guru
-            </a>
+        <a href="kelola_catat.php"
+           class="nav-link <?= $current_page == 'kelola_catat.php' ? 'active' : ''; ?>">
+            <i class="fas fa-clipboard-list"></i>
+            Kelola Catatan
+        </a>
 
-            <a href="kelola_siswa.php"
-               class="nav-link <?= $current_page == 'kelola_siswa.php' ? 'active' : 'text-white'; ?>">
-                Kelola Siswa
-            </a>
+        <a href="laporan.php"
+           class="nav-link <?= $current_page == 'laporan.php' ? 'active' : ''; ?>">
+            <i class="fas fa-file-alt"></i>
+            Laporan
+        </a>
 
-            <a href="kelola_kelas.php"
-               class="nav-link <?= $current_page == 'kelola_kelas.php' ? 'active' : 'text-white'; ?>">
-                Kelola Kelas
-            </a>
+    <?php } elseif ($role == 'guru') { ?>
+
+        <div class="menu-label">MENU GURU</div>
+
+        <a href="dashboard.php"
+           class="nav-link <?= $current_page == 'dashboard.php' ? 'active' : ''; ?>">
+            <i class="fas fa-home"></i>
+            Dashboard
+        </a>
+
+        <a href="catat_pelanggaran.php"
+           class="nav-link <?= $current_page == 'catat_pelanggaran.php' ? 'active' : ''; ?>">
+            <i class="fas fa-edit"></i>
+            Catat Pelanggaran
+        </a>
+
+        <a href="riwayat.php"
+           class="nav-link <?= $current_page == 'riwayat.php' ? 'active' : ''; ?>">
+            <i class="fas fa-history"></i>
+            Riwayat
+        </a>
+
+        <a href="rekap_poin.php"
+           class="nav-link <?= $current_page == 'rekap_poin.php' ? 'active' : ''; ?>">
+            <i class="fas fa-chart-bar"></i>
+            Rekap Poin
+        </a>
+
+        <?php if ($is_walikelas) { ?>
+
+            <hr>
+
+            <div class="menu-label">MENU WALI KELAS</div>
 
             <a href="laporan.php"
-               class="nav-link <?= $current_page == 'laporan.php' ? 'active' : 'text-white'; ?>">
-                Laporan
+               class="nav-link <?= $current_page == 'laporan.php' ? 'active' : ''; ?>">
+                <i class="fas fa-file-alt"></i>
+                Laporan Wali Kelas
             </a>
-
-        <?php } elseif ($role == 'guru') { ?>
-
-            <!-- Menu Guru -->
-            <hr class="border-secondary">
-            <div class="text-secondary small ms-2">MENU GURU</div>
-
-            <a href="dashboard.php"
-               class="nav-link <?= $current_page == 'dashboard.php' ? 'active' : 'text-white'; ?>">
-                Dashboard
-            </a>
-
-            <a href="catatan_pelanggaran.php"
-               class="nav-link <?= $current_page == 'catatan_pelanggaran.php' ? 'active' : 'text-white'; ?>">
-                Catat Pelanggaran
-            </a>
-
-            <a href="riwayat.php"
-               class="nav-link <?= $current_page == 'riwayat.php' ? 'active' : 'text-white'; ?>">
-                Riwayat
-            </a>
-
-            <a href="rekap_poin.php"
-               class="nav-link <?= $current_page == 'rekap_poin.php' ? 'active' : 'text-white'; ?>">
-                Rekap Poin
-            </a>
-
-            <!-- Menu tambahan khusus Wali Kelas -->
-            <?php if ($is_walikelas) { ?>
-
-                <hr class="border-secondary">
-
-                <a href="laporan.php"
-                   class="nav-link <?= $current_page == 'laporan.php' ? 'active' : 'text-white'; ?>">
-                    Laporan Wali Kelas
-                </a>
-
-            <?php } ?>
 
         <?php } ?>
 
-        <hr class="border-secondary">
+    <?php } ?>
 
-        <a href="logout.php" class="nav-link text-danger">
-            Logout
-        </a>
+    <hr>
 
-    </nav>
-</div>
+    <a href="logout.php"
+       class="nav-link logout"
+       onclick="return confirm('Yakin ingin logout?')">
+
+        <i class="fas fa-sign-out-alt"></i>
+        Logout
+    </a>
+
+</aside>

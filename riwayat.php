@@ -1,72 +1,151 @@
 
 <?php
-// riwayat.php
-
-// Memeriksa session login
 include 'includes/cek_session.php';
-
-// Menghubungkan ke database
 include 'config/koneksi.php';
 
-// Mengambil kata pencarian
-$cari = isset($_GET['cari'])
-    ? mysqli_real_escape_string($koneksi, trim($_GET['cari']))
-    : '';
+$cari = trim($_GET['cari'] ?? '');
+$status = trim($_GET['status'] ?? '');
 
-// Mengambil filter status
-$status = isset($_GET['status'])
-    ? mysqli_real_escape_string($koneksi, trim($_GET['status']))
-    : '';
+$sql = "SELECT * FROM t_pelanggaran_siswa WHERE 1=1";
 
-// Query dasar
-$sql = "SELECT *
-        FROM t_pelanggaran_siswa
-        WHERE 1=1";
+if ($cari !== '') {
+    $cari_aman = mysqli_real_escape_string($koneksi, $cari);
 
-// Pencarian berdasarkan nama siswa, pelanggaran, kelas, atau guru
-if ($cari != '') {
     $sql .= " AND (
-        nama_siswa LIKE '%$cari%'
-        OR nama_pelanggaran LIKE '%$cari%'
-        OR nama_kelas LIKE '%$cari%'
-        OR nama_guru LIKE '%$cari%'
+        nama_siswa LIKE '%$cari_aman%'
+        OR nama_pelanggaran LIKE '%$cari_aman%'
+        OR nama_kelas LIKE '%$cari_aman%'
+        OR nama_guru LIKE '%$cari_aman%'
     )";
 }
 
-// Filter berdasarkan status
-if ($status != '') {
-    $sql .= " AND status = '$status'";
+if ($status !== '') {
+    $status_aman = mysqli_real_escape_string($koneksi, $status);
+    $sql .= " AND status = '$status_aman'";
 }
 
-// Urutkan berdasarkan tanggal terbaru
 $sql .= " ORDER BY tanggal DESC, id DESC";
 
-// Menjalankan query
 $query = mysqli_query($koneksi, $sql);
 
 if (!$query) {
-    die('Gagal mengambil data: ' . mysqli_error($koneksi));
+    die("Gagal mengambil data: " . mysqli_error($koneksi));
 }
 
-// Menghitung jumlah data sesuai filter
 $jumlah = mysqli_num_rows($query);
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Riwayat Pelanggaran Siswa</title>
+<title>Riwayat Pelanggaran - MyWebsite</title>
 
-    <!-- Bootstrap 5 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-    <!-- DataTables Bootstrap 5 -->
-    <link href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.min.css"
-          rel="stylesheet">
+<style>
+    body {
+        background: #f4f6ff;
+        font-family: Arial, sans-serif;
+        overflow-x: hidden;
+    }
+
+    /*
+       Sidebar menggunakan posisi fixed.
+       Sisakan ruang untuk sidebar di sebelah kiri.
+    */
+    main.content-area {
+        margin-left: 220px;
+        width: calc(100% - 220px);
+        max-width: calc(100% - 220px);
+        flex: 0 0 calc(100% - 220px);
+        min-width: 0;
+        padding: 25px !important;
+    }
+
+    .content-card {
+        background: white;
+        border-radius: 12px;
+        padding: 22px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.06);
+        width: 100%;
+        min-width: 0;
+    }
+
+    .page-title {
+        color: #202b46;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .page-subtitle {
+        color: #777;
+        font-size: 14px;
+    }
+
+    .summary-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.05);
+    }
+
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    #tabelRiwayat {
+        width: 100% !important;
+        min-width: 1100px;
+    }
+
+    #tabelRiwayat thead th {
+        background: #202b46;
+        color: white;
+        white-space: nowrap;
+        font-size: 13px;
+        padding: 13px;
+    }
+
+    #tabelRiwayat tbody td {
+        font-size: 13px;
+        padding: 12px;
+        vertical-align: middle;
+    }
+
+    .filter-card,
+    .table-card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.05);
+    }
+
+    .card-header-custom {
+        background: #202b46;
+        color: white;
+        padding: 14px 18px;
+        border-radius: 10px 10px 0 0;
+    }
+
+    @media (max-width: 767px) {
+        main.content-area {
+            margin-left: 0;
+            width: 100%;
+            max-width: 100%;
+            flex-basis: 100%;
+            padding: 15px !important;
+        }
+
+        .content-card {
+            padding: 15px;
+        }
+    }
+</style>
 </head>
 
 <body>
@@ -76,125 +155,123 @@ $jumlah = mysqli_num_rows($query);
 
         <?php include 'layout/sidebar.php'; ?>
 
-        <!-- KONTEN -->
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="content-area">
 
-            <!-- Judul halaman -->
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-                <div>
-                    <h2>Riwayat Pelanggaran Siswa</h2>
-                    <p class="text-muted mb-0">
-                        Daftar catatan pelanggaran siswa yang telah dicatat.
-                    </p>
+            <div class="content-card">
+
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                    <div>
+                        <h4 class="page-title">
+                            <i class="fas fa-history me-2"></i>
+                            Riwayat Pelanggaran Siswa
+                        </h4>
+                        <p class="page-subtitle mb-0">
+                            Daftar catatan pelanggaran siswa yang telah dicatat.
+                        </p>
+                    </div>
+
+                    <a href="dashboard.php" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Kembali
+                    </a>
                 </div>
 
-                <a href="dashboard.php" class="btn btn-secondary">
-                    Kembali ke Dashboard
-                </a>
-            </div>
+                <hr>
 
-            <!-- Ringkasan jumlah data -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h6 class="text-muted">Jumlah Riwayat Ditampilkan</h6>
-                    <h3 class="fw-bold text-primary">
-                        <?= $jumlah; ?> data
-                    </h3>
-                </div>
-            </div>
-
-            <!-- Pencarian dan filter -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Pencarian dan Filter Riwayat</h5>
+                <div class="card summary-card mb-4">
+                    <div class="card-body">
+                        <div class="text-muted">Jumlah Riwayat Ditampilkan</div>
+                        <h3 class="fw-bold text-primary mb-0">
+                            <?= $jumlah; ?> data
+                        </h3>
+                    </div>
                 </div>
 
-                <div class="card-body">
-                    <form method="GET" action="riwayat.php">
-                        <div class="row g-3">
+                <div class="card filter-card mb-4">
+                    <div class="card-header-custom">
+                        <h6 class="mb-0">
+                            <i class="fas fa-search me-2"></i>
+                            Pencarian dan Filter Riwayat
+                        </h6>
+                    </div>
 
-                            <div class="col-md-6">
-                                <label for="cari" class="form-label">
-                                    Cari Riwayat
-                                </label>
+                    <div class="card-body">
+                        <form method="GET" action="riwayat.php">
+                            <div class="row g-3">
 
-                                <input
-                                    type="text"
-                                    name="cari"
-                                    id="cari"
-                                    class="form-control"
-                                    placeholder="Nama siswa, pelanggaran, kelas, guru..."
-                                    value="<?= htmlspecialchars($cari); ?>">
+                                <div class="col-md-6">
+                                    <label class="form-label">Cari Riwayat</label>
+                                    <input type="text"
+                                           name="cari"
+                                           class="form-control"
+                                           placeholder="Nama siswa, pelanggaran, kelas, guru..."
+                                           value="<?= htmlspecialchars($cari); ?>">
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label">Filter Status</label>
+                                    <select name="status" class="form-select">
+                                        <option value="">Semua Status</option>
+                                        <option value="belum" <?= $status == 'belum' ? 'selected' : ''; ?>>
+                                            Belum Ditindak
+                                        </option>
+                                        <option value="selesai" <?= $status == 'selesai' ? 'selected' : ''; ?>>
+                                            Selesai
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3 d-flex align-items-end gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i> Cari
+                                    </button>
+
+                                    <a href="riwayat.php" class="btn btn-secondary">
+                                        Reset
+                                    </a>
+                                </div>
+
                             </div>
-
-                            <div class="col-md-3">
-                                <label for="status" class="form-label">
-                                    Filter Status
-                                </label>
-
-                                <select name="status" id="status"
-                                        class="form-select">
-                                    <option value="">Semua Status</option>
-
-                                    <option value="belum"
-                                        <?= $status == 'belum' ? 'selected' : ''; ?>>
-                                        Belum Ditindak
-                                    </option>
-
-                                    <option value="selesai"
-                                        <?= $status == 'selesai' ? 'selected' : ''; ?>>
-                                        Selesai
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-3 d-flex align-items-end gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    Cari
-                                </button>
-
-                                <a href="riwayat.php" class="btn btn-secondary">
-                                    Reset
-                                </a>
-                            </div>
-
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Tabel riwayat -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Data Riwayat Pelanggaran</h5>
+                        </form>
+                    </div>
                 </div>
 
-                <div class="card-body">
-                    <div class="table-responsive">
+                <div class="card table-card">
+                    <div class="card-header-custom">
+                        <h6 class="mb-0">
+                            <i class="fas fa-table me-2"></i>
+                            Data Riwayat Pelanggaran
+                        </h6>
+                    </div>
 
-                        <table id="tabelRiwayat"
-                               class="table table-striped table-bordered table-hover align-middle">
+                    <div class="card-body">
+                        <div class="table-responsive">
 
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>No</th>
-                                    <th>Tanggal</th>
-                                    <th>Nama Siswa</th>
-                                    <th>Kelas</th>
-                                    <th>Jenis Pelanggaran</th>
-                                    <th>Poin</th>
-                                    <th>Guru Pencatat</th>
-                                    <th>Keterangan</th>
-                                    <th>Tindakan</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
+                            <table id="tabelRiwayat"
+                                   class="table table-striped table-bordered table-hover align-middle">
 
-                            <tbody>
-                                <?php while ($data = mysqli_fetch_assoc($query)) { ?>
+                                <thead>
                                     <tr>
-                                        <!-- Nomor diisi otomatis oleh DataTables -->
-                                        <td></td>
+                                        <th>No</th>
+                                        <th>Tanggal</th>
+                                        <th>Nama Siswa</th>
+                                        <th>Kelas</th>
+                                        <th>Jenis Pelanggaran</th>
+                                        <th>Poin</th>
+                                        <th>Guru Pencatat</th>
+                                        <th>Keterangan</th>
+                                        <th>Tindakan</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                <?php
+                                $no = 1;
+                                while ($data = mysqli_fetch_assoc($query)):
+                                ?>
+                                    <tr>
+                                        <td><?= $no++; ?></td>
 
                                         <td>
                                             <?= htmlspecialchars($data['tanggal'] ?? '-'); ?>
@@ -214,7 +291,7 @@ $jumlah = mysqli_num_rows($query);
 
                                         <td class="text-center">
                                             <span class="badge bg-warning text-dark">
-                                                <?= htmlspecialchars((string) ($data['poin'] ?? 0)); ?>
+                                                <?= htmlspecialchars((string)($data['poin'] ?? 0)); ?>
                                             </span>
                                         </td>
 
@@ -232,16 +309,11 @@ $jumlah = mysqli_num_rows($query);
 
                                         <td>
                                             <?php
-                                            $status_data = strtolower(
-                                                trim($data['status'] ?? '')
-                                            );
+                                            $st = strtolower(trim($data['status'] ?? ''));
 
-                                            if ($status_data == 'selesai') {
+                                            if ($st == 'selesai') {
                                                 echo '<span class="badge bg-success">Selesai</span>';
-                                            } elseif (
-                                                $status_data == 'belum' ||
-                                                $status_data == 'belum ditindak'
-                                            ) {
+                                            } elseif ($st == 'belum' || $st == 'belum ditindak') {
                                                 echo '<span class="badge bg-danger">Belum Ditindak</span>';
                                             } else {
                                                 echo '<span class="badge bg-secondary">'
@@ -251,62 +323,53 @@ $jumlah = mysqli_num_rows($query);
                                             ?>
                                         </td>
                                     </tr>
-                                <?php } ?>
-                            </tbody>
+                                <?php endwhile; ?>
+                                </tbody>
 
-                        </table>
+                            </table>
 
+                        </div>
                     </div>
                 </div>
+
             </div>
 
         </main>
+
     </div>
 </div>
 
-<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<!-- Bootstrap 5 JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
-<!-- DataTables JS -->
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/2.3.4/js/dataTables.bootstrap5.min.js"></script>
 
-<!-- Inisialisasi DataTables -->
 <script>
 $(document).ready(function () {
     $('#tabelRiwayat').DataTable({
         pageLength: 10,
         lengthMenu: [5, 10, 25, 50, 100],
-
         searching: true,
         ordering: true,
         paging: true,
-
-        // Urutkan berdasarkan tanggal terbaru
+        scrollX: true,
         order: [[1, 'desc']],
 
-        // Kolom No tidak diurutkan dan kolom No tidak dicari
-        columnDefs: [
-            {
-                orderable: false,
-                searchable: false,
-                targets: 0
-            }
-        ],
+        columnDefs: [{
+            orderable: false,
+            searchable: false,
+            targets: 0
+        }],
 
-        // Nomor urut menyesuaikan pencarian dan halaman
         drawCallback: function () {
-            var api = this.api();
-            var nomorAwal = api.page.info().start;
+            let api = this.api();
+            let awal = api.page.info().start;
 
             api.column(0, {
                 search: 'applied',
                 order: 'applied'
             }).nodes().each(function (cell, i) {
-                cell.innerHTML = nomorAwal + i + 1;
+                cell.innerHTML = awal + i + 1;
             });
         },
 
