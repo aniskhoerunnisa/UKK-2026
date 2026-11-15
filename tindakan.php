@@ -28,15 +28,33 @@ $total = mysqli_num_rows($sql);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             background: #f4f6ff;
             font-family: Arial, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            margin-left: 344px;
+            width: calc(100% - 344px);
+            min-height: 100vh;
+            padding: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
 
         .content-card {
             background: #fff;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 25px;
+            width: 100%;
+            max-width: 1100px;
             box-shadow: 0 4px 18px rgba(0,0,0,.06);
         }
 
@@ -79,17 +97,33 @@ $total = mysqli_num_rows($sql);
             color: #6c757d;
             font-size: 14px;
         }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .content-card {
+                padding: 15px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+        }
     </style>
 </head>
 
-<body class="bg-light">
+<body>
 
 <div class="container-fluid">
     <div class="row">
 
         <?php include "layout/sidebar.php"; ?>
 
-        <main class="col-md-9 col-lg-10 p-4">
+        <main class="main-content">
 
             <div class="content-card">
 
