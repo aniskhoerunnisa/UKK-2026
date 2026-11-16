@@ -278,7 +278,7 @@ $nonaktif = mysqli_fetch_assoc($qNonaktif)['total'];
 <div class="sidebar">
 
     <div class="brand">
-        <i class="fas fa-graduation-cap mr-2"></i> SISWA APP
+        <i class="fas fa-graduation-cap mr-2"></i> MyWebsite.
     </div>
 
     <div class="menu-title">Menu Utama</div>
@@ -386,8 +386,8 @@ $nonaktif = mysqli_fetch_assoc($qNonaktif)['total'];
                 <div class="stat-icon orange">
                     <i class="fas fa-user-times"></i>
                 </div>
-                <h3><?= $nonaktif; ?></h3>
-                <p>Wali Kelas Nonaktif</p>
+                <h3><?= $aktif; ?></h3>
+                <p>Wali Kelas aktif</p>
             </div>
         </div>
 
