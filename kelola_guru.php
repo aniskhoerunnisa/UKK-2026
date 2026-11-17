@@ -376,8 +376,8 @@ $nonaktif = mysqli_fetch_assoc($qNonaktif)['total'];
                 <div class="stat-icon orange">
                     <i class="fas fa-user-times"></i>
                 </div>
-                <h3><?= $nonaktif; ?></h3>
-                <p>Guru Nonaktif</p>
+                <h3><?= $aktif; ?></h3>
+                <p>Guru aktif</p>
             </div>
         </div>
 
